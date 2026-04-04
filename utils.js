@@ -26,6 +26,7 @@ window.calcNet = function (rows) {
 };
 
 // Account dropdown — shows all COA categories, natural category first
+// If selected account no longer exists in COA (renamed/deleted), still shows it
 window.createAccountDropdown = function (type, selected) {
   const sel = document.createElement("select");
   sel.className = "account-select";
@@ -38,6 +39,8 @@ window.createAccountDropdown = function (type, selected) {
   const naturalFirst = type === "sales" ? "sales" : "purchases";
   const ordered = [naturalFirst, ...Object.keys(window.COA).filter(c => c !== naturalFirst)];
 
+  let foundSelected = false;
+
   ordered.forEach(cat => {
     const groups = window.COA[cat] || {};
     Object.keys(groups).forEach(g => {
@@ -46,12 +49,23 @@ window.createAccountDropdown = function (type, selected) {
       groups[g].forEach(acc => {
         const o = document.createElement("option");
         o.value = acc; o.textContent = acc;
-        if (acc === selected) o.selected = true;
+        if (acc === selected) { o.selected = true; foundSelected = true; }
         og.appendChild(o);
       });
       sel.appendChild(og);
     });
   });
+
+  // If selected account was renamed/deleted, add it as a preserved option
+  if (selected && !foundSelected) {
+    const og = document.createElement("optgroup");
+    og.label = "⚠ Preserved (renamed/removed from COA)";
+    const o = document.createElement("option");
+    o.value = selected; o.textContent = selected; o.selected = true;
+    og.appendChild(o);
+    sel.insertBefore(og, sel.children[1]); // insert after blank option
+  }
+
   return sel;
 };
 
@@ -108,32 +122,57 @@ window.loadAuditLog = function (type) {
 };
 
 // Double-entry journal entries
-window.generateJournalEntries = function (txn, type, paymentMethod) {
-  const pm = paymentMethod || txn.paymentMethod || "Credit";
-  const cashAccount = pm === "Bank" ? "Cash in Bank" : "Cash on Hand";
-  const map = {};
-  const add = (acc, dr, cr) => {
+// paymentInfo = { type, date, bankName, checkNo, accountName, refNo, walletName, amount }
+window.generateJournalEntries = function (txn, type, paymentInfo) {
+  const pm   = paymentInfo?.type || txn.paymentMethod || txn.payment?.type || "Credit";
+  const map  = {};
+  const add  = (acc, dr, cr) => {
     if (!map[acc]) map[acc] = { debit:0, credit:0 };
     map[acc].debit += dr; map[acc].credit += cr;
   };
+
+  // Determine settlement account from payment type
+  // Maps to actual COA account names used in Balance Sheet
+  function settlementAccount(side) {
+    switch(pm) {
+      case "Cash":    return "Cash on Hand";
+      case "Check":   return "Cash in Bank";     // Check clears through bank
+      case "GCash":   return "Cash on Hand";     // GCash is treated as cash equivalent
+      case "Maya":    return "Cash on Hand";     // Maya is treated as cash equivalent
+      case "EWallet": return "Cash on Hand";     // E-wallets are cash equivalents
+      case "Bank":    return "Cash in Bank";
+      case "Credit":
+      default:
+        return side === "debit" ? "Accounts Receivable" : "Accounts Payable";
+    }
+  }
+
   (txn.rows || []).forEach(r => {
     const net   = parseFloat(r.net) || 0;
     const vat   = r.tax === "VAT" ? +(net * 0.12).toFixed(2) : 0;
     const gross = +(net + vat).toFixed(2);
     const acct  = r.account || (type === "sales" ? "Sales Revenue" : "Miscellaneous Expense");
+
     if (type === "sales") {
-      const drAcct = pm === "Credit" ? "Accounts Receivable" : cashAccount;
-      add(drAcct, gross, 0);
-      add(acct, 0, net);
+      // DR  settlement account  (gross — full amount received/receivable)
+      // CR  revenue account     (net)
+      // CR  Output VAT Payable  (vat)
+      add(settlementAccount("debit"), gross, 0);
+      add(acct,                       0,     net);
       if (vat > 0) add("Output VAT Payable", 0, vat);
     } else {
-      const crAcct = pm === "Credit" ? "Accounts Payable" : cashAccount;
-      add(acct, net, 0);
-      if (vat > 0) add("Input VAT", vat, 0);
-      add(crAcct, 0, gross);
+      // DR  expense account     (net)
+      // DR  Input VAT           (vat)
+      // CR  settlement account  (gross — full amount paid/payable)
+      add(acct,                        net,   0);
+      if (vat > 0) add("Input VAT",    vat,   0);
+      add(settlementAccount("credit"), 0,     gross);
     }
   });
-  return Object.entries(map).map(([account,v]) => ({ account, debit:v.debit, credit:v.credit }));
+
+  return Object.entries(map).map(([account,v]) => ({
+    account, debit: v.debit, credit: v.credit
+  }));
 };
 
 window.renderJournalEntries = function (entries, tbody) {
