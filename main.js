@@ -16,10 +16,152 @@ window.addEventListener("DOMContentLoaded", function () {
     function fmtDate(s) { return window.formatDate(s); }
 
     function paymentBadge(pm) {
-      if (pm === "Cash") return `<span class="badge cash">Cash</span>`;
-      if (pm === "Bank") return `<span class="badge bank">Bank</span>`;
-      return `<span class="badge credit">Credit</span>`;
+      const map = {
+        Cash:    `<span class="badge cash">Cash</span>`,
+        Check:   `<span class="badge check">Check</span>`,
+        GCash:   `<span class="badge gcash">GCash</span>`,
+        Maya:    `<span class="badge maya">Maya</span>`,
+        EWallet: `<span class="badge ewallet">E-Wallet</span>`,
+        Bank:    `<span class="badge bank">Bank</span>`,
+        Credit:  `<span class="badge credit">Credit</span>`,
+      };
+      return map[pm] || `<span class="badge draft">${pm||"—"}</span>`;
     }
+
+    // ── Payment Section Helpers ───────────────────────
+    // prefix: "sale" or "purch"
+    function initPaymentSection(prefix) {
+      const radioName = prefix === "sale" ? "salePayType" : "purchPayType";
+      document.querySelectorAll(`input[name="${radioName}"]`).forEach(radio => {
+        radio.addEventListener("change", () => showPaymentFields(prefix, radio.value));
+      });
+      showPaymentFields(prefix, "Credit");
+    }
+
+    function showPaymentFields(prefix, type) {
+      const types = ["Credit","Cash","Check","GCash","Maya","EWallet"];
+      types.forEach(t => {
+        const el = document.getElementById(`${prefix}PayFields_${t}`);
+        if (el) el.classList.toggle("hidden", t !== type);
+      });
+    }
+
+    function getPaymentType(prefix) {
+      const radioName = prefix === "sale" ? "salePayType" : "purchPayType";
+      const checked = document.querySelector(`input[name="${radioName}"]:checked`);
+      return checked ? checked.value : "Credit";
+    }
+
+    function setPaymentType(prefix, type) {
+      const radioName = prefix === "sale" ? "salePayType" : "purchPayType";
+      const radio = document.querySelector(`input[name="${radioName}"][value="${type}"]`);
+      if (radio) { radio.checked = true; showPaymentFields(prefix, type); }
+      else        { showPaymentFields(prefix, "Credit"); }
+    }
+
+    function readPaymentData(prefix) {
+      const type = getPaymentType(prefix);
+      const p = prefix;
+      const data = { type };
+      switch(type) {
+        case "Cash":
+          data.date   = document.getElementById(`${p}PayDate_Cash`)?.value || "";
+          data.amount = parseFloat(document.getElementById(`${p}PayAmt_Cash`)?.value) || 0;
+          break;
+        case "Check":
+          data.date     = document.getElementById(`${p}PayDate_Check`)?.value || "";
+          data.bankName = document.getElementById(`${p}PayBank_Check`)?.value.trim() || "";
+          data.checkNo  = document.getElementById(`${p}PayCheckNo`)?.value.trim() || "";
+          data.amount   = parseFloat(document.getElementById(`${p}PayAmt_Check`)?.value) || 0;
+          break;
+        case "GCash":
+          data.date        = document.getElementById(`${p}PayDate_GCash`)?.value || "";
+          data.accountName = document.getElementById(`${p}PayAccName_GCash`)?.value.trim() || "";
+          data.refNo       = document.getElementById(`${p}PayRef_GCash`)?.value.trim() || "";
+          data.amount      = parseFloat(document.getElementById(`${p}PayAmt_GCash`)?.value) || 0;
+          break;
+        case "Maya":
+          data.date        = document.getElementById(`${p}PayDate_Maya`)?.value || "";
+          data.accountName = document.getElementById(`${p}PayAccName_Maya`)?.value.trim() || "";
+          data.refNo       = document.getElementById(`${p}PayRef_Maya`)?.value.trim() || "";
+          data.amount      = parseFloat(document.getElementById(`${p}PayAmt_Maya`)?.value) || 0;
+          break;
+        case "EWallet":
+          data.date        = document.getElementById(`${p}PayDate_EWallet`)?.value || "";
+          data.walletName  = document.getElementById(`${p}PayWalletName`)?.value.trim() || "";
+          data.accountName = document.getElementById(`${p}PayAccName_EWallet`)?.value.trim() || "";
+          data.refNo       = document.getElementById(`${p}PayRef_EWallet`)?.value.trim() || "";
+          data.amount      = parseFloat(document.getElementById(`${p}PayAmt_EWallet`)?.value) || 0;
+          break;
+        case "Credit":
+        default:
+          break;
+      }
+      return data;
+    }
+
+    function writePaymentData(prefix, payment) {
+      if (!payment) { setPaymentType(prefix, "Credit"); return; }
+      const type = payment.type || "Credit";
+      setPaymentType(prefix, type);
+      const p = prefix;
+      switch(type) {
+        case "Cash":
+          if (document.getElementById(`${p}PayDate_Cash`))    document.getElementById(`${p}PayDate_Cash`).value    = payment.date    || "";
+          if (document.getElementById(`${p}PayAmt_Cash`))     document.getElementById(`${p}PayAmt_Cash`).value     = payment.amount  || "";
+          break;
+        case "Check":
+          if (document.getElementById(`${p}PayDate_Check`))   document.getElementById(`${p}PayDate_Check`).value   = payment.date     || "";
+          if (document.getElementById(`${p}PayBank_Check`))   document.getElementById(`${p}PayBank_Check`).value   = payment.bankName || "";
+          if (document.getElementById(`${p}PayCheckNo`))      document.getElementById(`${p}PayCheckNo`).value      = payment.checkNo  || "";
+          if (document.getElementById(`${p}PayAmt_Check`))    document.getElementById(`${p}PayAmt_Check`).value    = payment.amount   || "";
+          break;
+        case "GCash":
+          if (document.getElementById(`${p}PayDate_GCash`))      document.getElementById(`${p}PayDate_GCash`).value      = payment.date        || "";
+          if (document.getElementById(`${p}PayAccName_GCash`))   document.getElementById(`${p}PayAccName_GCash`).value   = payment.accountName || "";
+          if (document.getElementById(`${p}PayRef_GCash`))       document.getElementById(`${p}PayRef_GCash`).value       = payment.refNo       || "";
+          if (document.getElementById(`${p}PayAmt_GCash`))       document.getElementById(`${p}PayAmt_GCash`).value       = payment.amount      || "";
+          break;
+        case "Maya":
+          if (document.getElementById(`${p}PayDate_Maya`))       document.getElementById(`${p}PayDate_Maya`).value       = payment.date        || "";
+          if (document.getElementById(`${p}PayAccName_Maya`))    document.getElementById(`${p}PayAccName_Maya`).value    = payment.accountName || "";
+          if (document.getElementById(`${p}PayRef_Maya`))        document.getElementById(`${p}PayRef_Maya`).value        = payment.refNo       || "";
+          if (document.getElementById(`${p}PayAmt_Maya`))        document.getElementById(`${p}PayAmt_Maya`).value        = payment.amount      || "";
+          break;
+        case "EWallet":
+          if (document.getElementById(`${p}PayDate_EWallet`))    document.getElementById(`${p}PayDate_EWallet`).value    = payment.date        || "";
+          if (document.getElementById(`${p}PayWalletName`))      document.getElementById(`${p}PayWalletName`).value      = payment.walletName  || "";
+          if (document.getElementById(`${p}PayAccName_EWallet`)) document.getElementById(`${p}PayAccName_EWallet`).value = payment.accountName || "";
+          if (document.getElementById(`${p}PayRef_EWallet`))     document.getElementById(`${p}PayRef_EWallet`).value     = payment.refNo       || "";
+          if (document.getElementById(`${p}PayAmt_EWallet`))     document.getElementById(`${p}PayAmt_EWallet`).value     = payment.amount      || "";
+          break;
+      }
+    }
+
+    function lockPaymentSection(prefix, lock) {
+      const sectionId = prefix === "sale" ? "salesPaymentSection" : "purchasePaymentSection";
+      const section   = document.getElementById(sectionId);
+      if (!section) return;
+      section.querySelectorAll("input, select").forEach(el => el.disabled = lock);
+      section.classList.toggle("payment-locked", lock);
+    }
+
+    function resetPaymentSection(prefix) {
+      setPaymentType(prefix, "Credit");
+      const p = prefix;
+      const ids = [
+        `${p}PayDate_Cash`,`${p}PayAmt_Cash`,
+        `${p}PayDate_Check`,`${p}PayBank_Check`,`${p}PayCheckNo`,`${p}PayAmt_Check`,
+        `${p}PayDate_GCash`,`${p}PayAccName_GCash`,`${p}PayRef_GCash`,`${p}PayAmt_GCash`,
+        `${p}PayDate_Maya`,`${p}PayAccName_Maya`,`${p}PayRef_Maya`,`${p}PayAmt_Maya`,
+        `${p}PayDate_EWallet`,`${p}PayWalletName`,`${p}PayAccName_EWallet`,`${p}PayRef_EWallet`,`${p}PayAmt_EWallet`
+      ];
+      ids.forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
+    }
+
+    // Init both payment sections
+    initPaymentSection("sale");
+    initPaymentSection("purch");
 
     // ── Overview ─────────────────────────────────────
     window.updateOverview = function () {
@@ -169,13 +311,14 @@ window.addEventListener("DOMContentLoaded", function () {
       el.textContent=s; el.className="txn-status "+s.toLowerCase();
     }
     function lockSalesForm(lock) {
-      ["salesCustomer","salesTin","salesReference","salesPaymentMethod"].forEach(id=>{
+      ["salesCustomer","salesTin","salesReference"].forEach(id=>{
         const el=document.getElementById(id); if(el) el.disabled=lock;
       });
       salesBody.querySelectorAll("input,select").forEach(el=>el.disabled=lock);
       salesBody.querySelectorAll(".btn-del").forEach(b=>b.disabled=lock);
       const addBtn=document.getElementById("addSalesRowBtn");
       addBtn.disabled=lock; addBtn.classList.toggle("hidden",lock);
+      lockPaymentSection("sale", lock);
     }
     function toggleSaleBtns(state) {
       document.getElementById("saveSaleBtn").classList.toggle("hidden", state==="posted"||state==="void");
@@ -225,7 +368,7 @@ window.addEventListener("DOMContentLoaded", function () {
     function resetSaleForm(withRow) {
       salesBody.innerHTML="";
       ["salesCustomer","salesTin","salesReference"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
-      const pm=document.getElementById("salesPaymentMethod"); if(pm) pm.value="Credit";
+      resetPaymentSection("sale");
       ["salesCustomer","salesReference"].forEach(id=>window.clearInlineError(document.getElementById(id)));
       [["saveSaleBtn","Save"],["postSaleBtn","Post"],["voidSaleBtn","Void"]].forEach(([id,lbl])=>{
         const b=document.getElementById(id); if(b){b.dataset.confirmed="";b.textContent=lbl;}
@@ -236,7 +379,7 @@ window.addEventListener("DOMContentLoaded", function () {
     }
     function showSaleJournal(txn) {
       if(!txn||txn.status==="DRAFT"){document.getElementById("salesJournalPreview").classList.add("hidden");return;}
-      window.renderJournalEntries(window.generateJournalEntries(txn,"sales",txn.paymentMethod||"Credit"),document.getElementById("salesJournalBody"));
+      window.renderJournalEntries(window.generateJournalEntries(txn,"sales",txn.payment||{type:txn.paymentMethod||"Credit"}),document.getElementById("salesJournalBody"));
       document.getElementById("salesJournalPreview").classList.remove("hidden");
     }
     function renderSalesList() {
@@ -266,7 +409,8 @@ window.addEventListener("DOMContentLoaded", function () {
       document.getElementById("salesCustomer").value =s.customer;
       document.getElementById("salesTin").value      =s.tin||"";
       document.getElementById("salesReference").value=s.reference||"";
-      const pm=document.getElementById("salesPaymentMethod"); if(pm) pm.value=s.paymentMethod||"Credit";
+      // Restore payment — support both new format (s.payment) and old (s.paymentMethod)
+      writePaymentData("sale", s.payment || { type: s.paymentMethod || "Credit" });
       s.rows.forEach(r=>addSalesRow(r));
       setSalesStatus(s.status);
       lockSalesForm(s.status!=="DRAFT");
@@ -300,10 +444,12 @@ window.addEventListener("DOMContentLoaded", function () {
       if(!this.dataset.confirmed){window.showInlineError(cEl,"Tap Save again to confirm",true);this.dataset.confirmed="true";this.textContent="Confirm Save";return;}
       this.dataset.confirmed="";this.textContent="Save";
       const existing=window.currentSaleIndex!==null?window.savedSales[window.currentSaleIndex]:null;
+      const payment=readPaymentData("sale");
       const sale={
         customer,reference,
         tin:document.getElementById("salesTin").value.trim(),
-        paymentMethod:document.getElementById("salesPaymentMethod").value,
+        payment,
+        paymentMethod: payment.type, // keep for backward compat
         status:"DRAFT",lastEditedStatus:"Draft",
         createdAt:existing?.createdAt||nowTS(),
         postedAt:existing?.postedAt||null,
@@ -354,11 +500,12 @@ window.addEventListener("DOMContentLoaded", function () {
     function showPurchaseForm(){document.getElementById("purchaseListView").classList.add("hidden");document.getElementById("purchaseFormView").classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"});}
     function setPurchaseStatus(s){const el=document.getElementById("purchaseStatus");el.textContent=s;el.className="txn-status "+s.toLowerCase();}
     function lockPurchaseForm(lock){
-      ["purchaseSupplier","purchaseTin","purchaseReference","purchasePaymentMethod"].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=lock;});
+      ["purchaseSupplier","purchaseTin","purchaseReference"].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=lock;});
       purchaseBody.querySelectorAll("input,select,textarea").forEach(el=>el.disabled=lock);
       purchaseBody.querySelectorAll(".btn-del").forEach(b=>b.disabled=lock);
       const addBtn=document.getElementById("addPurchaseRowBtn");
       addBtn.disabled=lock; addBtn.classList.toggle("hidden",lock);
+      lockPaymentSection("purch", lock);
     }
     function togglePurchaseBtns(state){
       document.getElementById("savePurchaseBtn").classList.toggle("hidden",state==="posted"||state==="void");
@@ -407,7 +554,7 @@ window.addEventListener("DOMContentLoaded", function () {
     function resetPurchaseForm(withRow){
       purchaseBody.innerHTML="";
       ["purchaseSupplier","purchaseTin","purchaseReference"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
-      const pm=document.getElementById("purchasePaymentMethod"); if(pm) pm.value="Credit";
+      resetPaymentSection("purch");
       ["purchaseSupplier","purchaseReference"].forEach(id=>window.clearInlineError(document.getElementById(id)));
       [["savePurchaseBtn","Save"],["postPurchaseBtn","Post"],["voidPurchaseBtn","Void"]].forEach(([id,lbl])=>{
         const b=document.getElementById(id); if(b){b.dataset.confirmed="";b.textContent=lbl;}
@@ -418,7 +565,7 @@ window.addEventListener("DOMContentLoaded", function () {
     }
     function showPurchaseJournal(txn){
       if(!txn||txn.status==="DRAFT"){document.getElementById("purchaseJournalPreview").classList.add("hidden");return;}
-      window.renderJournalEntries(window.generateJournalEntries(txn,"purchases",txn.paymentMethod||"Credit"),document.getElementById("purchaseJournalBody"));
+      window.renderJournalEntries(window.generateJournalEntries(txn,"purchases",txn.payment||{type:txn.paymentMethod||"Credit"}),document.getElementById("purchaseJournalBody"));
       document.getElementById("purchaseJournalPreview").classList.remove("hidden");
     }
     function renderPurchaseList(){
@@ -666,58 +813,85 @@ window.addEventListener("DOMContentLoaded", function () {
     }
 
     function balanceSheet(from,to){
-      const ledger=buildLedger(from,to);
-      const assetAccts     = Object.values(window.COA.assets||{}).flat();
-      const liabAccts      = Object.values(window.COA.liabilities||{}).flat();
-      const equityAccts    = Object.values(window.COA.equity||{}).flat();
+      const ledger      = buildLedger(from,to);
+      const assetAccts  = Object.values(window.COA.assets||{}).flat();
+      const liabAccts   = Object.values(window.COA.liabilities||{}).flat();
+      const equityAccts = Object.values(window.COA.equity||{}).flat();
 
       let totalAssets=0, totalLiab=0, totalEquity=0;
       const assetRows=[], liabRows=[], equityRows=[];
 
       Object.entries(ledger).forEach(([acc,v])=>{
-        const dr=v.debit-v.credit;
-        const cr=v.credit-v.debit;
-        if(assetAccts.includes(acc)&&dr!==0)  { totalAssets+=dr;  assetRows.push([acc,dr]); }
-        if(liabAccts.includes(acc)&&cr!==0)   { totalLiab+=cr;    liabRows.push([acc,cr]); }
-        if(equityAccts.includes(acc)&&cr!==0) { totalEquity+=cr;  equityRows.push([acc,cr]); }
+        // Assets: normal balance is DEBIT (DR > CR = positive asset)
+        // but Cash credited more than debited = negative (still show it)
+        if(assetAccts.includes(acc)){
+          const bal = v.debit - v.credit;
+          if(bal !== 0){ totalAssets += bal; assetRows.push([acc, bal]); }
+        }
+        // Liabilities: normal balance is CREDIT
+        if(liabAccts.includes(acc)){
+          const bal = v.credit - v.debit;
+          if(bal !== 0){ totalLiab += bal; liabRows.push([acc, bal]); }
+        }
+        // Equity: normal balance is CREDIT
+        if(equityAccts.includes(acc)){
+          const bal = v.credit - v.debit;
+          if(bal !== 0){ totalEquity += bal; equityRows.push([acc, bal]); }
+        }
       });
 
-      // Add net income to equity
-      const lisTb=buildLedger(from,to);
-      const revenueAccts=Object.values(window.COA.sales||{}).flat();
-      const expenseAccts=Object.values(window.COA.purchases||{}).flat();
-      let rev=0,exp=0;
-      Object.entries(lisTb).forEach(([acc,v])=>{
-        if(revenueAccts.includes(acc)) rev+=v.credit-v.debit;
-        if(expenseAccts.includes(acc)) exp+=v.debit-v.credit;
+      // Add current year net income to equity section
+      const revenueAccts = Object.values(window.COA.sales||{}).flat();
+      const expenseAccts = Object.values(window.COA.purchases||{}).flat();
+      let rev=0, exp=0;
+      Object.entries(ledger).forEach(([acc,v])=>{
+        if(revenueAccts.includes(acc)) rev += v.credit - v.debit;
+        if(expenseAccts.includes(acc)) exp += v.debit  - v.credit;
       });
-      const netIncome=rev-exp;
-      if(netIncome!==0){ totalEquity+=netIncome; equityRows.push(["Current Year Net Income",netIncome]); }
+      const netIncome = rev - exp;
+      if(netIncome !== 0){
+        totalEquity += netIncome;
+        equityRows.push(["Current Year Net Income", netIncome]);
+      }
 
-      const comp=window.companyProfile;
-      const header=comp.name?`<div class="fs-company"><strong>${comp.name}</strong>${comp.tin?` | TIN: ${comp.tin}`:""}</div>`:"";
+      const totalLiabEquity = totalLiab + totalEquity;
+      const balanced = Math.abs(totalAssets - totalLiabEquity) < 0.01;
+
+      const comp   = window.companyProfile;
+      const header = comp.name
+        ? `<div class="fs-company"><strong>${comp.name}</strong>${comp.tin ? ` | TIN: ${comp.tin}` : ""}</div>`
+        : "";
+
+      const fmtAmt = v => v < 0 ? `(${Math.abs(v).toFixed(2)})` : v.toFixed(2);
 
       return `<div class="report-section">
         <h3>Balance Sheet (Statement of Financial Position)</h3>
         ${header}
         <p class="report-period">As of: ${fmtDate(to)||"Today"}</p>
+        ${!balanced ? `<div class="tb-err">⚠ Balance Sheet does not balance — you may have unrecorded equity or opening balances</div>` : ""}
         <table class="report-table">
           <thead><tr><th>Account</th><th class="num">Amount</th></tr></thead>
           <tbody>
             <tr class="fs-section-header"><td colspan="2"><strong>ASSETS</strong></td></tr>
-            ${assetRows.map(([a,v])=>`<tr><td class="fs-indent">${a}</td><td class="num">${v.toFixed(2)}</td></tr>`).join("")||"<tr><td class='fs-indent' colspan='2' style='color:#94a3b8'>No asset balances recorded</td></tr>"}
-            <tr class="fs-subtotal"><td><strong>Total Assets</strong></td><td class="num"><strong>${totalAssets.toFixed(2)}</strong></td></tr>
+            ${assetRows.length
+              ? assetRows.map(([a,v])=>`<tr><td class="fs-indent">${a}</td><td class="num">${fmtAmt(v)}</td></tr>`).join("")
+              : `<tr><td class="fs-indent" colspan="2" style="color:#94a3b8">No asset balances — use Cash or Bank payment method to record asset movements</td></tr>`}
+            <tr class="fs-subtotal"><td><strong>Total Assets</strong></td><td class="num"><strong>${fmtAmt(totalAssets)}</strong></td></tr>
             <tr class="fs-section-header"><td colspan="2"><strong>LIABILITIES</strong></td></tr>
-            ${liabRows.map(([a,v])=>`<tr><td class="fs-indent">${a}</td><td class="num">${v.toFixed(2)}</td></tr>`).join("")||"<tr><td class='fs-indent' colspan='2' style='color:#94a3b8'>No liability balances recorded</td></tr>"}
-            <tr class="fs-subtotal"><td><strong>Total Liabilities</strong></td><td class="num"><strong>${totalLiab.toFixed(2)}</strong></td></tr>
+            ${liabRows.length
+              ? liabRows.map(([a,v])=>`<tr><td class="fs-indent">${a}</td><td class="num">${fmtAmt(v)}</td></tr>`).join("")
+              : `<tr><td class="fs-indent" colspan="2" style="color:#94a3b8">No liability balances</td></tr>`}
+            <tr class="fs-subtotal"><td><strong>Total Liabilities</strong></td><td class="num"><strong>${fmtAmt(totalLiab)}</strong></td></tr>
             <tr class="fs-section-header"><td colspan="2"><strong>EQUITY</strong></td></tr>
-            ${equityRows.map(([a,v])=>`<tr><td class="fs-indent">${a}</td><td class="num">${v.toFixed(2)}</td></tr>`).join("")||"<tr><td class='fs-indent' colspan='2' style='color:#94a3b8'>No equity balances recorded</td></tr>"}
-            <tr class="fs-subtotal"><td><strong>Total Equity</strong></td><td class="num"><strong>${totalEquity.toFixed(2)}</strong></td></tr>
+            ${equityRows.length
+              ? equityRows.map(([a,v])=>`<tr><td class="fs-indent">${a}</td><td class="num">${fmtAmt(v)}</td></tr>`).join("")
+              : `<tr><td class="fs-indent" colspan="2" style="color:#94a3b8">No equity balances</td></tr>`}
+            <tr class="fs-subtotal"><td><strong>Total Equity</strong></td><td class="num"><strong>${fmtAmt(totalEquity)}</strong></td></tr>
           </tbody>
           <tfoot>
-            <tr class="${Math.abs(totalAssets-(totalLiab+totalEquity))<0.01?"fs-profit":"fs-loss"}">
+            <tr class="${balanced?"fs-profit":"fs-loss"}">
               <td><strong>Total Liabilities + Equity</strong></td>
-              <td class="num"><strong>${(totalLiab+totalEquity).toFixed(2)}</strong></td>
+              <td class="num"><strong>${fmtAmt(totalLiabEquity)}</strong></td>
             </tr>
           </tfoot>
         </table>
@@ -744,88 +918,366 @@ window.addEventListener("DOMContentLoaded", function () {
     document.getElementById("exportCsvBtn").onclick=function(){
       if(!_lastReport){alert("Run a report first.");return;}
       const{from,to,type}=_lastReport;
-      const rows=[["FinMatrix Export"],[`Period: ${from||"all"} to ${to||"all"}`],[`Generated: ${nowTS()}`],[]];
+      const comp = window.companyProfile || {};
+      const compName = comp.name || "FinMatrix";
+      const compTin  = comp.tin  ? `TIN: ${comp.tin}` : "";
+      const compAddr = comp.address || "";
+      const compNature = comp.nature || "";
+      const generated = nowTS();
+
+      // ── Standard accounting report header ──
+      function reportHeader(title, periodLabel) {
+        return [
+          [compName],
+          compTin  ? [compTin]  : [],
+          compAddr ? [compAddr] : [],
+          compNature ? [`Business Type: ${compNature} Registered`] : [],
+          [],
+          [title],
+          [periodLabel],
+          [`Generated: ${generated}`],
+          [`Prepared by: FinMatrix Accounting`],
+          []
+        ].filter(r => r.length === 0 || r[0] !== "");
+      }
+
+      let rows = [];
+
       if(type==="trial"){
-        rows.push(["TRIAL BALANCE"],["Account","Debit","Credit"]);
-        const ledger=buildLedger(from,to); let dr=0,cr=0;
-        Object.entries(ledger).forEach(([a,v])=>{dr+=v.debit;cr+=v.credit;rows.push([a,v.debit||"",v.credit||""]);});
-        rows.push(["TOTAL",dr.toFixed(2),cr.toFixed(2)]);
+        rows.push(...reportHeader(
+          "TRIAL BALANCE",
+          `For the period: ${from ? window.formatDate(from) : "All"} to ${to ? window.formatDate(to) : "All"}`
+        ));
+        rows.push(["Account Name","Debit (₱)","Credit (₱)"]);
+        rows.push(["","",""]);
+        const ledger=buildLedger(from,to);
+        let dr=0,cr=0;
+        Object.entries(ledger).forEach(([a,v])=>{
+          dr+=v.debit; cr+=v.credit;
+          rows.push([
+            a,
+            v.debit  > 0 ? v.debit.toFixed(2)  : "",
+            v.credit > 0 ? v.credit.toFixed(2) : ""
+          ]);
+        });
+        rows.push([]);
+        rows.push(["TOTAL", dr.toFixed(2), cr.toFixed(2)]);
+        rows.push([]);
+        rows.push([Math.abs(dr-cr)<0.01 ? "Status: BALANCED ✓" : "Status: OUT OF BALANCE ⚠"]);
+
       } else if(type==="is"){
-        rows.push(["INCOME STATEMENT"],["Account","Amount"]);
+        rows.push(...reportHeader(
+          "INCOME STATEMENT",
+          `For the period: ${from ? window.formatDate(from) : "Beginning"} to ${to ? window.formatDate(to) : "Present"}`
+        ));
+        rows.push(["(Statement of Financial Performance)"]);
+        rows.push([]);
+
         const ledger=buildLedger(from,to);
         const revAccts=Object.values(window.COA.sales||{}).flat();
         const expAccts=Object.values(window.COA.purchases||{}).flat();
-        let rev=0,exp=0;
+        let rev=0, exp=0;
+
+        rows.push(["REVENUE","Amount (₱)"]);
+        rows.push(["─────────────────────────────",""]);
         Object.entries(ledger).forEach(([a,v])=>{
           const net=v.credit-v.debit;
-          if(revAccts.includes(a)&&net!==0){rev+=net;rows.push([a,net.toFixed(2)]);}
+          if(revAccts.includes(a)&&net!==0){ rev+=net; rows.push(["  "+a, net.toFixed(2)]); }
         });
-        rows.push(["Total Revenue",rev.toFixed(2)],[]);
+        if(rev===0) rows.push(["  (No revenue recorded)","0.00"]);
+        rows.push(["─────────────────────────────",""]);
+        rows.push(["TOTAL REVENUE", rev.toFixed(2)]);
+        rows.push([]);
+
+        rows.push(["EXPENSES","Amount (₱)"]);
+        rows.push(["─────────────────────────────",""]);
         Object.entries(ledger).forEach(([a,v])=>{
           const net=v.debit-v.credit;
-          if(expAccts.includes(a)&&net!==0){exp+=net;rows.push([a,net.toFixed(2)]);}
+          if(expAccts.includes(a)&&net!==0){ exp+=net; rows.push(["  "+a, "("+net.toFixed(2)+")"]); }
         });
-        rows.push(["Total Expenses",exp.toFixed(2)],["Net Income",(rev-exp).toFixed(2)]);
+        if(exp===0) rows.push(["  (No expenses recorded)","0.00"]);
+        rows.push(["─────────────────────────────",""]);
+        rows.push(["TOTAL EXPENSES", "("+exp.toFixed(2)+")"]);
+        rows.push([]);
+        rows.push(["═════════════════════════════",""]);
+
+        const ni=rev-exp;
+        rows.push([
+          ni>=0 ? "NET INCOME" : "NET LOSS",
+          ni>=0 ? ni.toFixed(2) : "("+Math.abs(ni).toFixed(2)+")"
+        ]);
+
+      } else if(type==="bs"){
+        rows.push(...reportHeader(
+          "BALANCE SHEET",
+          `As of: ${to ? window.formatDate(to) : "Today"}`
+        ));
+        rows.push(["(Statement of Financial Position)"]);
+        rows.push([]);
+
+        const ledger=buildLedger(from,to);
+        const assetAccts  = Object.values(window.COA.assets||{}).flat();
+        const liabAccts   = Object.values(window.COA.liabilities||{}).flat();
+        const equityAccts = Object.values(window.COA.equity||{}).flat();
+        const revAccts    = Object.values(window.COA.sales||{}).flat();
+        const expAccts    = Object.values(window.COA.purchases||{}).flat();
+        let tA=0, tL=0, tE=0;
+        const fmtA = v => v < 0 ? "("+Math.abs(v).toFixed(2)+")" : v.toFixed(2);
+
+        rows.push(["ASSETS","Amount (₱)"]);
+        rows.push(["─────────────────────────────",""]);
+        Object.entries(ledger).forEach(([a,v])=>{
+          if(assetAccts.includes(a)){
+            const b=v.debit-v.credit;
+            if(b!==0){ tA+=b; rows.push(["  "+a, fmtA(b)]); }
+          }
+        });
+        if(tA===0) rows.push(["  (No asset balances)","0.00"]);
+        rows.push(["─────────────────────────────",""]);
+        rows.push(["TOTAL ASSETS", fmtA(tA)]);
+        rows.push([]);
+
+        rows.push(["LIABILITIES","Amount (₱)"]);
+        rows.push(["─────────────────────────────",""]);
+        Object.entries(ledger).forEach(([a,v])=>{
+          if(liabAccts.includes(a)){
+            const b=v.credit-v.debit;
+            if(b!==0){ tL+=b; rows.push(["  "+a, fmtA(b)]); }
+          }
+        });
+        if(tL===0) rows.push(["  (No liability balances)","0.00"]);
+        rows.push(["─────────────────────────────",""]);
+        rows.push(["TOTAL LIABILITIES", fmtA(tL)]);
+        rows.push([]);
+
+        rows.push(["EQUITY","Amount (₱)"]);
+        rows.push(["─────────────────────────────",""]);
+        Object.entries(ledger).forEach(([a,v])=>{
+          if(equityAccts.includes(a)){
+            const b=v.credit-v.debit;
+            if(b!==0){ tE+=b; rows.push(["  "+a, fmtA(b)]); }
+          }
+        });
+        let rev=0,exp=0;
+        Object.entries(ledger).forEach(([a,v])=>{
+          if(revAccts.includes(a)) rev+=v.credit-v.debit;
+          if(expAccts.includes(a)) exp+=v.debit-v.credit;
+        });
+        const ni=rev-exp;
+        if(ni!==0){ tE+=ni; rows.push(["  Current Year Net Income", fmtA(ni)]); }
+        if(tE===0) rows.push(["  (No equity balances)","0.00"]);
+        rows.push(["─────────────────────────────",""]);
+        rows.push(["TOTAL EQUITY", fmtA(tE)]);
+        rows.push([]);
+        rows.push(["═════════════════════════════",""]);
+        rows.push(["TOTAL LIABILITIES + EQUITY", fmtA(tL+tE)]);
+        rows.push([]);
+        rows.push([Math.abs(tA-(tL+tE))<0.01 ? "Status: BALANCED ✓" : "Status: OUT OF BALANCE ⚠"]);
+
       } else {
+        // Sales & Purchases account summary
+        rows.push(...reportHeader(
+          type==="sales" ? "SALES REPORT" : type==="purchases" ? "PURCHASES REPORT" : "SALES & PURCHASES REPORT",
+          `For the period: ${from ? window.formatDate(from) : "All"} to ${to ? window.formatDate(to) : "All"}`
+        ));
+
         if(type==="both"||type==="sales"){
-          rows.push(["SALES BY ACCOUNT"],["Account","Net","VAT","Gross"]);
+          rows.push(["SALES BY ACCOUNT","Net (₱)","VAT (₱)","Gross (₱)"]);
+          rows.push(["─────────────────────────────","","",""]);
           let tN=0,tV=0,tG=0;
-          Object.entries(buildAccTotals(window.savedSales,from,to)).forEach(([a,t])=>{tN+=t.net;tV+=t.vat;tG+=t.gross;rows.push([a,t.net.toFixed(2),t.vat.toFixed(2),t.gross.toFixed(2)]);});
-          rows.push(["TOTAL",tN.toFixed(2),tV.toFixed(2),tG.toFixed(2)],[]);
+          const sm=buildAccTotals(window.savedSales,from,to);
+          if(Object.keys(sm).length===0){
+            rows.push(["  (No posted sales)","0.00","0.00","0.00"]);
+          } else {
+            Object.entries(sm).forEach(([a,t])=>{
+              tN+=t.net;tV+=t.vat;tG+=t.gross;
+              rows.push(["  "+a,t.net.toFixed(2),t.vat.toFixed(2),t.gross.toFixed(2)]);
+            });
+          }
+          rows.push(["─────────────────────────────","","",""]);
+          rows.push(["TOTAL SALES",tN.toFixed(2),tV.toFixed(2),tG.toFixed(2)]);
+          rows.push([]);
         }
+
         if(type==="both"||type==="purchases"){
-          rows.push(["PURCHASES BY ACCOUNT"],["Account","Net","VAT","Gross"]);
+          rows.push(["PURCHASES BY ACCOUNT","Net (₱)","VAT (₱)","Gross (₱)"]);
+          rows.push(["─────────────────────────────","","",""]);
           let tN=0,tV=0,tG=0;
-          Object.entries(buildAccTotals(window.savedPurchases,from,to)).forEach(([a,t])=>{tN+=t.net;tV+=t.vat;tG+=t.gross;rows.push([a,t.net.toFixed(2),t.vat.toFixed(2),t.gross.toFixed(2)]);});
-          rows.push(["TOTAL",tN.toFixed(2),tV.toFixed(2),tG.toFixed(2)]);
+          const pm=buildAccTotals(window.savedPurchases,from,to);
+          if(Object.keys(pm).length===0){
+            rows.push(["  (No posted purchases)","0.00","0.00","0.00"]);
+          } else {
+            Object.entries(pm).forEach(([a,t])=>{
+              tN+=t.net;tV+=t.vat;tG+=t.gross;
+              rows.push(["  "+a,t.net.toFixed(2),t.vat.toFixed(2),t.gross.toFixed(2)]);
+            });
+          }
+          rows.push(["─────────────────────────────","","",""]);
+          rows.push(["TOTAL PURCHASES",tN.toFixed(2),tV.toFixed(2),tG.toFixed(2)]);
+          rows.push([]);
         }
-      }
-      // Transaction detail
-      rows.push([],["TRANSACTION DETAIL"],["Type","Date","Party","TIN","Reference","Account","Net","VAT","Gross","Tax"]);
-      const addDetail=(list,label,nameKey)=>{
-        list.filter(x=>x.status==="POSTED").forEach(t=>{
-          t.rows.forEach(r=>{
-            const d=r.date||""; if(from&&d<from) return; if(to&&d>to) return;
-            const v=r.tax==="VAT"?r.net*0.12:0;
-            rows.push([label,r.date,t[nameKey],t.tin||"",t.reference||"",r.account||"",r.net.toFixed(2),v.toFixed(2),(r.net+v).toFixed(2),r.tax]);
+
+        // Transaction detail
+        rows.push([]);
+        rows.push(["TRANSACTION DETAIL"]);
+        rows.push(["Type","Date","Party","TIN","Reference No.","Account","Net (₱)","VAT (₱)","Gross (₱)","Tax Type","Payment Method","Payment Date","Check No.","Ref No."]);
+        rows.push(["─────","────","─────","───","────────────","───────","────────","────────","─────────","────────","──────────────","────────────","─────────","──────"]);
+
+        const addDetail=(list,label,nameKey)=>{
+          list.filter(x=>x.status==="POSTED").forEach(t=>{
+            t.rows.forEach(r=>{
+              const d=r.date||"";
+              if(from&&d<from) return; if(to&&d>to) return;
+              const v=r.tax==="VAT"?+(r.net*0.12).toFixed(2):0;
+              const pay=t.payment||{type:t.paymentMethod||"Credit"};
+              rows.push([
+                label,
+                r.date||"",
+                t[nameKey]||"",
+                t.tin||"",
+                t.reference||"",
+                r.account||"",
+                r.net.toFixed(2),
+                v.toFixed(2),
+                (r.net+v).toFixed(2),
+                r.tax||"",
+                pay.type||"Credit",
+                pay.date||"",
+                pay.checkNo||"",
+                pay.refNo||""
+              ]);
+            });
           });
-        });
-      };
-      if(type==="both"||type==="sales")     addDetail(window.savedSales,    "Sale",    "customer");
-      if(type==="both"||type==="purchases") addDetail(window.savedPurchases,"Purchase","supplier");
+        };
+        if(type==="both"||type==="sales")     addDetail(window.savedSales,    "Sale",    "customer");
+        if(type==="both"||type==="purchases") addDetail(window.savedPurchases,"Purchase","supplier");
+      }
+
       const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+      const bom = "\uFEFF"; // UTF-8 BOM for Excel compatibility
       const a=document.createElement("a");
-      a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-      a.download=`FinMatrix_${from||"all"}_${to||"all"}.csv`;
+      a.href=URL.createObjectURL(new Blob([bom+csv],{type:"text/csv;charset=utf-8;"}));
+      a.download=`FinMatrix_${type.toUpperCase()}_${from||"all"}_${to||"all"}.csv`;
       a.click();
     };
 
-    // Google Drive backup button
-    document.getElementById("driveBackupBtn").onclick=function(){
-      if(!navigator.onLine){
-        alert("You are offline. Please go online to back up to Google Drive.");
+    // ── Google Drive Backup ───────────────────────────
+    // Uses Google Identity Services (GIS) + Drive API v3
+    const GDRIVE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"; // Replace with your OAuth client ID
+    const GDRIVE_SCOPE     = "https://www.googleapis.com/auth/drive.file";
+
+    function getBackupJson() {
+      return JSON.stringify({
+        exportedAt:     nowTS(),
+        version:        window.APP_INFO.version,
+        companyProfile: window.companyProfile,
+        COA:            window.COA,
+        sales:          window.savedSales,
+        purchases:      window.savedPurchases
+      }, null, 2);
+    }
+
+    async function uploadToDrive(token) {
+      const filename = `FinMatrix_Backup_${new Date().toISOString().slice(0,10)}.json`;
+      const content  = getBackupJson();
+      const metadata = { name: filename, mimeType: "application/json" };
+
+      // Multipart upload
+      const boundary = "finmatrix_boundary";
+      const body = [
+        `--${boundary}`,
+        "Content-Type: application/json; charset=UTF-8",
+        "",
+        JSON.stringify(metadata),
+        `--${boundary}`,
+        "Content-Type: application/json",
+        "",
+        content,
+        `--${boundary}--`
+      ].join("\r\n");
+
+      const res = await fetch(
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": `multipart/related; boundary=${boundary}`
+          },
+          body
+        }
+      );
+
+      if (!res.ok) throw new Error(`Drive upload failed: ${res.status}`);
+      const file = await res.json();
+      return file.name;
+    }
+
+    document.getElementById("driveBackupBtn").onclick = async function () {
+      if (!navigator.onLine) {
+        alert("⚠️ You are offline.\n\nPlease go online to back up to Google Drive.");
         return;
       }
-      const data={
-        exportedAt: nowTS(),
-        version: window.APP_INFO.version,
-        companyProfile: window.companyProfile,
-        COA: window.COA,
-        sales: window.savedSales,
-        purchases: window.savedPurchases
-      };
-      const json=JSON.stringify(data,null,2);
-      const blob=new Blob([json],{type:"application/json"});
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement("a");
-      a.href=url;
-      a.download=`FinMatrix_Backup_${new Date().toISOString().slice(0,10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      // Note: Full Google Drive API integration requires OAuth — this downloads
-      // the file which user can manually save to Drive. True API integration
-      // will be added in PWA version.
-      alert("Backup file downloaded! Save it to your Google Drive manually.\n\nFull auto-backup to Drive will be available in the PWA version.");
+
+      // Check if Google Identity Services is loaded
+      if (typeof google === "undefined" || !google.accounts) {
+        // Fallback: download JSON file manually
+        const btn = this;
+        btn.textContent = "☁️ Downloading…";
+        const blob = new Blob([getBackupJson()], { type: "application/json" });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement("a");
+        a.href     = url;
+        a.download = `FinMatrix_Backup_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        btn.textContent = "☁️ Backup Data";
+        alert("✅ Backup file downloaded!\n\nSave it to your Google Drive manually.\n\nNote: To enable auto-upload to Drive, add your Google OAuth Client ID in Settings.");
+        return;
+      }
+
+      // Google Identity Services token flow
+      this.textContent = "☁️ Connecting…";
+      this.disabled = true;
+      const btn = this;
+
+      try {
+        const token = await new Promise((resolve, reject) => {
+          const client = google.accounts.oauth2.initTokenClient({
+            client_id: GDRIVE_CLIENT_ID,
+            scope:     GDRIVE_SCOPE,
+            callback:  (res) => {
+              if (res.error) reject(new Error(res.error));
+              else resolve(res.access_token);
+            }
+          });
+          client.requestAccessToken({ prompt: "consent" });
+        });
+
+        btn.textContent = "☁️ Uploading…";
+        const filename = await uploadToDrive(token);
+        btn.textContent = "☁️ Backup Data";
+        btn.disabled = false;
+        alert(`✅ Backup saved to Google Drive!\n\nFile: ${filename}`);
+
+      } catch(err) {
+        console.error("Drive backup error:", err);
+        btn.textContent = "☁️ Backup Data";
+        btn.disabled = false;
+        if (GDRIVE_CLIENT_ID === "YOUR_GOOGLE_CLIENT_ID") {
+          alert("⚠️ Google Drive not configured yet.\n\nTo enable:\n1. Go to console.cloud.google.com\n2. Create a project → Enable Drive API\n3. Create OAuth 2.0 credentials\n4. Replace YOUR_GOOGLE_CLIENT_ID in main.js\n\nFor now, your backup has been downloaded as a file.");
+          // Fallback to file download
+          const blob = new Blob([getBackupJson()], { type: "application/json" });
+          const url  = URL.createObjectURL(blob);
+          const a    = document.createElement("a");
+          a.href = url;
+          a.download = `FinMatrix_Backup_${new Date().toISOString().slice(0,10)}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        } else {
+          alert(`❌ Backup failed: ${err.message}\n\nPlease try again.`);
+        }
+      }
     };
 
     // ══════════════════════════════════════════════════
@@ -865,7 +1317,24 @@ window.addEventListener("DOMContentLoaded", function () {
             if(action==="delete-group"){if(!confirm(`Delete group "${g}" and all accounts?`)) return;delete window.COA[t][g];}
             else if(action==="rename-group"){const n=prompt(`Rename "${g}":`,g);if(!n||n===g) return;const newG={};Object.keys(window.COA[t]).forEach(k=>{newG[k===g?n:k]=window.COA[t][k];});window.COA[t]=newG;}
             else if(action==="delete-acc"){if(!confirm(`Remove "${window.COA[t][g][+index]}"?`)) return;window.COA[t][g].splice(+index,1);}
-            else if(action==="rename-acc"){const cur=window.COA[t][g][+index];const n=prompt(`Rename "${cur}":`,cur);if(!n||n===cur) return;window.COA[t][g][+index]=n.trim();}
+            else if(action==="rename-acc"){
+              const cur=window.COA[t][g][+index];
+              const n=prompt(`Rename "${cur}":`,cur);
+              if(!n||n.trim()===cur) return;
+              const newName=n.trim();
+              window.COA[t][g][+index]=newName;
+              // Update all existing saved transactions that used the old account name
+              let updated=0;
+              window.savedSales.forEach((s,si)=>{
+                s.rows.forEach((r,ri)=>{ if(r.account===cur){ window.savedSales[si].rows[ri].account=newName; updated++; } });
+                if(updated>0) window.DB.updateSale(si);
+              });
+              updated=0;
+              window.savedPurchases.forEach((p,pi)=>{
+                p.rows.forEach((r,ri)=>{ if(r.account===cur){ window.savedPurchases[pi].rows[ri].account=newName; updated++; } });
+                if(updated>0) window.DB.updatePurchase(pi);
+              });
+            }
             window.DB.saveCOA();renderCOA();
           };
         });
