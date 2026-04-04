@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="FinMatrix"/>
+  <meta name="application-name" content="FinMatrix"/>
+  <meta name="theme-color" content="#1e40af"/>
+  <meta name="description" content="Free mobile-first accounting tool for Philippine small businesses and freelancers."/>
+
+  <title>FinMatrix</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json"/>
+
+  <!-- Favicons & Icons -->
+  <link rel="icon"             type="image/png" sizes="32x32"  href="favicon-32x32.png"/>
+  <link rel="apple-touch-icon" sizes="180x180"                 href="apple-touch-icon.png"/>
+  <link rel="icon"             type="image/png" sizes="192x192" href="icon-192x192.png"/>
+
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<header>
+  <div class="title">
+    <div class="title-inner">
+      <img src="logo.png" alt="FinMatrix" class="header-logo"/>
+      <div>
+        <h1>FinMatrix</h1>
+        <span class="company-sub hidden"></span>
+      </div>
+    </div>
+  </div>
+  <nav>
+    <ul>
+      <li><a href="#home"           class="nav-link">Home</a></li>
+      <li><a href="#revenue"        class="nav-link">Sales</a></li>
+      <li><a href="#bills"          class="nav-link">Purchases</a></li>
+      <li><a href="#journal"        class="nav-link">Journal</a></li>
+      <li><a href="#summary-report" class="nav-link">Reports</a></li>
+      <li class="settings-menu">
+        <button type="button" id="settingsBtn">Settings</button>
+        <ul id="settingsDropdown" class="hidden">
+          <li><a href="#company-profile" class="nav-link">🏢 Company Profile</a></li>
+          <li><a href="#coa"             class="nav-link">📊 Chart of Accounts</a></li>
+          <li><a href="#tutorial"        class="nav-link">📖 Tutorial</a></li>
+          <li><a href="#about"           class="nav-link">ℹ️ About</a></li>
+          <li class="dropdown-divider"></li>
+          <li><button type="button" id="driveBackupBtn" class="dropdown-action-btn">☁️ Backup Data</button></li>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+
+  <!-- HOME -->
+  <section id="home" class="page">
+    <h2 class="page-title">Overview <span class="sub-note">net · posted only</span></h2>
+    <div class="overview-cards">
+      <div class="card card-sales">
+        <span>Total Sales (Net)</span>
+        <strong id="homeSalesTotal">0.00</strong>
+      </div>
+      <div class="card card-purchases">
+        <span>Total Purchases (Net)</span>
+        <strong id="homePurchasesTotal">0.00</strong>
+      </div>
+      <div class="card card-net">
+        <span>Net Income</span>
+        <strong id="homeNetIncome">0.00</strong>
+      </div>
+    </div>
+    <div class="chart-wrapper">
+      <canvas id="overviewChart"></canvas>
+    </div>
+    <div class="overview-recent">
+      <div class="recent-block">
+        <h3 class="recent-title">Recent Sales</h3>
+        <div id="homeRecentSales" class="recent-list"></div>
+      </div>
+      <div class="recent-block">
+        <h3 class="recent-title">Recent Purchases</h3>
+        <div id="homeRecentPurchases" class="recent-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SALES -->
+  <section id="revenue" class="page hidden">
+    <h2 class="page-title">Sales</h2>
+    <div id="salesListView">
+      <div class="list-header">
+        <button type="button" id="addNewSaleBtn" class="btn-primary">+ Add New</button>
+        <div class="list-filters">
+          <label>From <input type="date" id="salesFromDate"></label>
+          <label>To <input type="date" id="salesToDate"></label>
+          <button type="button" id="filterSalesBtn" class="btn-filter">Filter</button>
+        </div>
+        <div class="list-search">
+          <input type="text" id="salesSearch" placeholder="Search…">
+          <button type="button" id="clearSalesSearch" class="btn-clear">×</button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table class="txn-table">
+          <thead><tr><th>Date</th><th>Customer</th><th>TIN</th><th>Reference</th><th>Payment</th><th class="num">Gross</th><th>Status</th></tr></thead>
+          <tbody id="salesListTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="salesFormView" class="hidden">
+      <div class="form-topbar">
+        <span id="salesStatus" class="txn-status draft">DRAFT</span>
+        <div class="total-box"><span>Grand Total</span><strong id="salesTotal">0.00</strong></div>
+      </div>
+      <div class="form-header">
+        <div><label>Customer Name</label><input type="text" id="salesCustomer" autocomplete="off"></div>
+        <div><label>TIN Number</label><input type="text" id="salesTin" autocomplete="off" placeholder="000-000-000"></div>
+        <div><label>Reference No.</label><input type="text" id="salesReference" autocomplete="off"></div>
+        <div>
+          <label>Payment Method</label>
+          <select id="salesPaymentMethod" class="form-select">
+            <option value="Credit">Credit (AR)</option>
+            <option value="Cash">Cash</option>
+            <option value="Bank">Bank Transfer</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table class="txn-table">
+          <thead><tr><th>Date</th><th>Description</th><th>Account</th><th class="num">Net</th><th class="num">Output VAT</th><th>Tax</th><th></th></tr></thead>
+          <tbody id="salesTableBody"></tbody>
+        </table>
+      </div>
+      <div class="row-actions"><button type="button" id="addSalesRowBtn">+ Add Row</button></div>
+      <div class="form-footer">
+        <div class="audit-log">
+          <p id="salesCreatedAt">Created: —</p>
+          <p id="salesPostedAt" class="hidden">Posted: —</p>
+          <p id="salesVoidedAt" class="hidden">Voided: —</p>
+          <p>Status: <span id="salesRecordStatus">New Draft</span></p>
+        </div>
+        <div class="summary-breakdown">
+          <div class="summary-row"><span>Net:</span><span id="salesSummaryNet">0.00</span></div>
+          <div class="summary-row"><span>Output VAT (12%):</span><span id="salesSummaryVat">0.00</span></div>
+          <div class="summary-row"><span>Exempt / None:</span><span id="salesSummaryExempt">0.00</span></div>
+          <div class="summary-row grand-total"><span>Grand Total:</span><strong id="salesSummaryGrand">0.00</strong></div>
+        </div>
+      </div>
+      <div id="salesJournalPreview" class="journal-preview hidden">
+        <h4 class="journal-title">Journal Entries</h4>
+        <table class="journal-table">
+          <thead><tr><th>Account</th><th>Debit</th><th>Credit</th></tr></thead>
+          <tbody id="salesJournalBody"></tbody>
+        </table>
+      </div>
+      <div class="button-row">
+        <button type="button" id="saveSaleBtn">Save</button>
+        <button type="button" id="editSaleBtn"  class="hidden">Edit</button>
+        <button type="button" id="postSaleBtn"  class="hidden">Post</button>
+        <button type="button" id="voidSaleBtn"  class="hidden">Void</button>
+        <button type="button" id="cancelSaleBtn">Cancel</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PURCHASES -->
+  <section id="bills" class="page hidden">
+    <h2 class="page-title">Purchases</h2>
+    <div id="purchaseListView">
+      <div class="list-header">
+        <button type="button" id="addNewPurchaseBtn" class="btn-primary">+ Add New</button>
+        <div class="list-filters">
+          <label>From <input type="date" id="purchaseFromDate"></label>
+          <label>To <input type="date" id="purchaseToDate"></label>
+          <button type="button" id="filterPurchasesBtn" class="btn-filter">Filter</button>
+        </div>
+        <div class="list-search">
+          <input type="text" id="purchaseSearch" placeholder="Search…">
+          <button type="button" id="clearPurchaseSearch" class="btn-clear">×</button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table class="txn-table">
+          <thead><tr><th>Date</th><th>Supplier</th><th>TIN</th><th>Reference</th><th>Payment</th><th class="num">Gross</th><th>Status</th></tr></thead>
+          <tbody id="purchaseListTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="purchaseFormView" class="hidden">
+      <div class="form-topbar">
+        <span id="purchaseStatus" class="txn-status draft">DRAFT</span>
+        <div class="total-box"><span>Grand Total</span><strong id="purchaseTotal">0.00</strong></div>
+      </div>
+      <div class="form-header">
+        <div><label>Supplier Name</label><input type="text" id="purchaseSupplier" autocomplete="off"></div>
+        <div><label>TIN Number</label><input type="text" id="purchaseTin" autocomplete="off" placeholder="000-000-000"></div>
+        <div><label>Reference No.</label><input type="text" id="purchaseReference" autocomplete="off"></div>
+        <div>
+          <label>Payment Method</label>
+          <select id="purchasePaymentMethod" class="form-select">
+            <option value="Credit">Credit (AP)</option>
+            <option value="Cash">Cash</option>
+            <option value="Bank">Bank Transfer</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table class="txn-table">
+          <thead><tr><th>Date</th><th>Description</th><th>Account</th><th class="num">Net</th><th class="num">Input VAT</th><th>Tax</th><th></th></tr></thead>
+          <tbody id="purchaseTableBody"></tbody>
+        </table>
+      </div>
+      <div class="row-actions"><button type="button" id="addPurchaseRowBtn">+ Add Row</button></div>
+      <div class="form-footer">
+        <div class="audit-log">
+          <p id="purchaseCreatedAt">Created: —</p>
+          <p id="purchasePostedAt" class="hidden">Posted: —</p>
+          <p id="purchaseVoidedAt" class="hidden">Voided: —</p>
+          <p>Status: <span id="purchaseRecordStatus">New Draft</span></p>
+        </div>
+        <div class="summary-breakdown">
+          <div class="summary-row"><span>Net:</span><span id="purchaseSummaryNet">0.00</span></div>
+          <div class="summary-row"><span>Input VAT (12%):</span><span id="purchaseSummaryVat">0.00</span></div>
+          <div class="summary-row"><span>Exempt / None:</span><span id="purchaseSummaryExempt">0.00</span></div>
+          <div class="summary-row grand-total"><span>Grand Total:</span><strong id="purchaseSummaryGrand">0.00</strong></div>
+        </div>
+      </div>
+      <div id="purchaseJournalPreview" class="journal-preview hidden">
+        <h4 class="journal-title">Journal Entries</h4>
+        <table class="journal-table">
+          <thead><tr><th>Account</th><th>Debit</th><th>Credit</th></tr></thead>
+          <tbody id="purchaseJournalBody"></tbody>
+        </table>
+      </div>
+      <div class="button-row">
+        <button type="button" id="savePurchaseBtn">Save</button>
+        <button type="button" id="editPurchaseBtn"  class="hidden">Edit</button>
+        <button type="button" id="postPurchaseBtn"  class="hidden">Post</button>
+        <button type="button" id="voidPurchaseBtn"  class="hidden">Void</button>
+        <button type="button" id="cancelPurchaseBtn">Cancel</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOURNAL -->
+  <section id="journal" class="page hidden">
+    <h2 class="page-title">General Journal <span class="sub-note">posted only</span></h2>
+    <div class="report-filters">
+      <div><label>From</label><input type="date" id="journalFromDate"></div>
+      <div><label>To</label>  <input type="date" id="journalToDate"></div>
+      <button type="button" class="btn-primary" id="runJournalBtn">Run</button>
+    </div>
+    <div id="journalOutput"></div>
+  </section>
+
+  <!-- REPORTS -->
+  <section id="summary-report" class="page hidden">
+    <h2 class="page-title">Reports <span class="sub-note">posted only</span></h2>
+    <div class="report-filters">
+      <div><label>From</label><input type="date" id="reportFromDate"></div>
+      <div><label>To</label>  <input type="date" id="reportToDate"></div>
+      <div>
+        <label>Report Type</label>
+        <select id="reportType">
+          <option value="both">Sales &amp; Purchases</option>
+          <option value="sales">Sales Only</option>
+          <option value="purchases">Purchases Only</option>
+          <option value="trial">Trial Balance</option>
+          <option value="is">Income Statement</option>
+          <option value="bs">Balance Sheet</option>
+        </select>
+      </div>
+      <button type="button" class="btn-primary"  id="runReportBtn">Run Report</button>
+      <button type="button" class="btn-export"   id="exportCsvBtn">⬇ Export CSV</button>
+    </div>
+    <div id="reportOutput"></div>
+  </section>
+
+  <!-- COMPANY PROFILE -->
+  <section id="company-profile" class="page hidden">
+    <h2 class="page-title">🏢 Company Profile</h2>
+    <div class="settings-form">
+      <div class="settings-group">
+        <h3 class="settings-group-title">Business Information</h3>
+        <div class="settings-field"><label>Company / Business Name</label><input type="text" id="cpName" placeholder="e.g. Juan dela Cruz Trading"></div>
+        <div class="settings-field"><label>Business Address</label><textarea id="cpAddress" rows="2" placeholder="Street, City, Province"></textarea></div>
+        <div class="settings-field">
+          <label>Business Nature</label>
+          <select id="cpNature" class="form-select">
+            <option value="VAT">VAT Registered</option>
+            <option value="Non-VAT">Non-VAT</option>
+          </select>
+        </div>
+        <div class="settings-field"><label>Contact / Email</label><input type="text" id="cpContact" placeholder="09xx-xxx-xxxx or email"></div>
+      </div>
+      <div class="settings-group">
+        <h3 class="settings-group-title">BIR Registration Details</h3>
+        <div class="settings-field"><label>TIN (Tax Identification Number)</label><input type="text" id="cpTin" placeholder="000-000-000-000"></div>
+        <div class="settings-field"><label>RDO Code</label><input type="text" id="cpRdo" placeholder="e.g. 040"></div>
+        <div class="settings-field"><label>BIR Certificate of Registration No.</label><input type="text" id="cpBirReg" placeholder="e.g. RC-0000-00000000"></div>
+      </div>
+      <button type="button" class="btn-primary btn-full" id="saveCompanyProfileBtn">Save Profile</button>
+    </div>
+  </section>
+
+  <!-- COA -->
+  <section id="coa" class="page hidden">
+    <h2 class="page-title">📊 Chart of Accounts</h2>
+    <div class="coa-tabs">
+      <button class="coa-tab active" data-coa-tab="sales">Revenue</button>
+      <button class="coa-tab" data-coa-tab="purchases">Expenses</button>
+      <button class="coa-tab" data-coa-tab="assets">Assets</button>
+      <button class="coa-tab" data-coa-tab="liabilities">Liabilities</button>
+      <button class="coa-tab" data-coa-tab="equity">Equity</button>
+    </div>
+    <div class="coa-panel active" id="coa-panel-sales">
+      <div id="coaSalesGroups"></div>
+      <div class="coa-new-group"><input type="text" id="newSalesGroupName" placeholder="New group name"><button type="button" class="btn-primary" id="addSalesGroupBtn">+ Group</button></div>
+    </div>
+    <div class="coa-panel" id="coa-panel-purchases">
+      <div id="coaPurchasesGroups"></div>
+      <div class="coa-new-group"><input type="text" id="newPurchasesGroupName" placeholder="New group name"><button type="button" class="btn-primary" id="addPurchasesGroupBtn">+ Group</button></div>
+    </div>
+    <div class="coa-panel" id="coa-panel-assets">
+      <div id="coaAssetsGroups"></div>
+      <div class="coa-new-group"><input type="text" id="newAssetsGroupName" placeholder="New group name"><button type="button" class="btn-primary" id="addAssetsGroupBtn">+ Group</button></div>
+    </div>
+    <div class="coa-panel" id="coa-panel-liabilities">
+      <div id="coaLiabilitiesGroups"></div>
+      <div class="coa-new-group"><input type="text" id="newLiabilitiesGroupName" placeholder="New group name"><button type="button" class="btn-primary" id="addLiabilitiesGroupBtn">+ Group</button></div>
+    </div>
+    <div class="coa-panel" id="coa-panel-equity">
+      <div id="coaEquityGroups"></div>
+      <div class="coa-new-group"><input type="text" id="newEquityGroupName" placeholder="New group name"><button type="button" class="btn-primary" id="addEquityGroupBtn">+ Group</button></div>
+    </div>
+  </section>
+
+  <!-- TUTORIAL -->
+  <section id="tutorial" class="page hidden">
+    <h2 class="page-title">📖 How to Use FinMatrix</h2>
+    <div id="tutorialContent"></div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="page hidden">
+    <h2 class="page-title">ℹ️ About</h2>
+    <div id="aboutContent"></div>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="config.js"></script>
+<script src="db.js"></script>
+<script src="utils.js"></script>
+<script src="main.js"></script>
+
+<!-- PWA Service Worker Registration -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js")
+        .then(reg => console.log("FinMatrix SW registered:", reg.scope))
+        .catch(err => console.error("SW registration failed:", err));
+    });
+  }
+</script>
+</body>
+</html>
