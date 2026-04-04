@@ -4,7 +4,7 @@
   "description": "A free mobile-first double-entry accounting tool for Philippine small businesses and freelancers.",
   "start_url": "./index.html",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "landscape",
   "background_color": "#1e40af",
   "theme_color": "#1e40af",
   "lang": "en-PH",
