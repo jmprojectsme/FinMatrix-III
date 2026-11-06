@@ -311,7 +311,7 @@ window.addEventListener("DOMContentLoaded", function () {
       el.textContent=s; el.className="txn-status "+s.toLowerCase();
     }
     function lockSalesForm(lock) {
-      ["salesCustomer","salesTin","salesReference"].forEach(id=>{
+      ["salesCustomer","salesTin","salesReference","salesPaymentMethod"].forEach(id=>{
         const el=document.getElementById(id); if(el) el.disabled=lock;
       });
       salesBody.querySelectorAll("input,select").forEach(el=>el.disabled=lock);
@@ -369,6 +369,7 @@ window.addEventListener("DOMContentLoaded", function () {
       salesBody.innerHTML="";
       ["salesCustomer","salesTin","salesReference"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
       resetPaymentSection("sale");
+      const spm=document.getElementById("salesPaymentMethod"); if(spm) spm.value="Credit";
       ["salesCustomer","salesReference"].forEach(id=>window.clearInlineError(document.getElementById(id)));
       [["saveSaleBtn","Save"],["postSaleBtn","Post"],["voidSaleBtn","Void"]].forEach(([id,lbl])=>{
         const b=document.getElementById(id); if(b){b.dataset.confirmed="";b.textContent=lbl;}
@@ -409,8 +410,9 @@ window.addEventListener("DOMContentLoaded", function () {
       document.getElementById("salesCustomer").value =s.customer;
       document.getElementById("salesTin").value      =s.tin||"";
       document.getElementById("salesReference").value=s.reference||"";
-      // Restore payment — support both new format (s.payment) and old (s.paymentMethod)
-      writePaymentData("sale", s.payment || { type: s.paymentMethod || "Credit" });
+      // Restore payment method from the saved record (paymentMethod, or older payment.type)
+      const spm=document.getElementById("salesPaymentMethod");
+      if(spm) spm.value=s.paymentMethod||s.payment?.type||"Credit";
       s.rows.forEach(r=>addSalesRow(r));
       setSalesStatus(s.status);
       lockSalesForm(s.status!=="DRAFT");
@@ -444,7 +446,9 @@ window.addEventListener("DOMContentLoaded", function () {
       if(!this.dataset.confirmed){window.showInlineError(cEl,"Tap Save again to confirm",true);this.dataset.confirmed="true";this.textContent="Confirm Save";return;}
       this.dataset.confirmed="";this.textContent="Save";
       const existing=window.currentSaleIndex!==null?window.savedSales[window.currentSaleIndex]:null;
-      const payment=readPaymentData("sale");
+      // B1 fix: read the Payment Method dropdown that is actually on the Sales form
+      const paymentType=document.getElementById("salesPaymentMethod")?.value||"Credit";
+      const payment={type:paymentType};
       const sale={
         customer,reference,
         tin:document.getElementById("salesTin").value.trim(),

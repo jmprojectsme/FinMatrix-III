@@ -7,6 +7,7 @@ These tests run automatically on GitHub every time you push, so you don't need a
 | File | What it checks |
 |---|---|
 | `engine.test.js` | Accounting engine: journal entries for cash/bank/credit sales and purchases, VAT and rounding, debit = credit, Trial Balance, Income Statement and Balance Sheet totals for a standard dataset |
+| `ui-sales.test.js` | The real Sales form in a simulated browser: Cash/Bank/Credit sales post to the right account, payment method survives reopen and reload, posted sales are locked, and sales saved by older versions are not changed |
 | `pwa.test.js` | App packaging: manifest is valid, icons exist, every file the service worker caches exists, every script in `index.html` exists |
 
 Before the tests, GitHub also checks that every `.js` file has valid syntax.
@@ -32,8 +33,12 @@ When you fix one of those bugs:
 With Node.js 20 or newer (on Android you can use Termux):
 
 ```
+npm install
 npm test
 ```
+
+`npm install` downloads the test tools (jsdom, fake-indexeddb) into `node_modules/`.
+They are used only by the tests — the app itself does not use them.
 
 ## Rule
 

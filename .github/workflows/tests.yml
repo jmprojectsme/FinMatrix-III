@@ -18,9 +18,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+
+      - name: Install test tools (jsdom, fake-indexeddb)
+        run: npm ci
 
       - name: Check JavaScript syntax
         run: npm run check
 
       - name: Run accounting and app tests
-        run: node --test tests/engine.test.js tests/pwa.test.js
+        run: node --test tests/engine.test.js tests/pwa.test.js tests/ui-sales.test.js
