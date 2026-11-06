@@ -1,0 +1,30 @@
+name: Tests
+
+# Runs on every push to any branch, and on every pull request into main.
+# Results appear as a green check or red X next to each commit and pull request.
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install test tools (jsdom, fake-indexeddb)
+        run: npm ci
+
+      - name: Check JavaScript syntax
+        run: npm run check
+
+      - name: Run accounting and app tests
+        run: node --test tests/engine.test.js tests/pwa.test.js tests/ui-sales.test.js
