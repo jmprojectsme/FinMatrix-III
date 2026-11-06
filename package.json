@@ -1,0 +1,10 @@
+{
+  "name": "finmatrix",
+  "version": "2.0.0",
+  "private": true,
+  "description": "FinMatrix — mobile-first double-entry accounting PWA",
+  "scripts": {
+    "check": "node --check config.js && node --check db.js && node --check utils.js && node --check main.js && node --check sw.js",
+    "test": "npm run check && node --test tests/engine.test.js tests/pwa.test.js"
+  }
+}
