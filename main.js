@@ -292,6 +292,31 @@ window.addEventListener("DOMContentLoaded", function () {
       document.getElementById("settingsDropdown")?.classList.add("hidden")
     );
 
+    // ── Validation helpers (audit B2, B3, B4) ─────────
+    // Checks every amount box in a form table. Shows an error under each bad one.
+    function checkRowAmounts(body, selector) {
+      let ok=true; const values=[];
+      [...body.children].forEach(r=>{
+        const inp=r.querySelector(selector);
+        window.clearInlineError(inp);
+        const raw=inp.validity&&inp.validity.badInput ? "invalid" : inp.value;
+        const res=window.validateAmount(raw);
+        if(!res.ok){ ok=false; window.showInlineError(inp,res.error); values.push(0); }
+        else values.push(res.value);
+      });
+      return {ok,values};
+    }
+    // Full checks before posting. Shows the problems and returns false if it can't be posted.
+    function canPost(rec, type, nameEl, btn) {
+      window.clearInlineError(nameEl);
+      const errs=window.validateDocumentForPost(rec, type);
+      if(!errs.length) return true;
+      const more=errs.length>3?` (+${errs.length-3} more)`:"";
+      window.showInlineError(nameEl,"Cannot post: "+errs.slice(0,3).join("; ")+more);
+      btn.dataset.confirmed=""; btn.textContent="Post";
+      return false;
+    }
+
     // ══════════════════════════════════════════════════
     // SALES MODULE
     // ══════════════════════════════════════════════════
@@ -443,6 +468,8 @@ window.addEventListener("DOMContentLoaded", function () {
       window.clearInlineError(cEl); window.clearInlineError(rEl);
       if(!customer){window.showInlineError(cEl,"Customer name is required");return;}
       if(reference&&window.isDuplicateRef(window.savedSales,reference,window.currentSaleIndex)){window.showInlineError(rEl,"Reference already exists");return;}
+      const amounts=checkRowAmounts(salesBody,".s-net");
+      if(!amounts.ok){this.dataset.confirmed="";this.textContent="Save";return;}
       if(!this.dataset.confirmed){window.showInlineError(cEl,"Tap Save again to confirm",true);this.dataset.confirmed="true";this.textContent="Confirm Save";return;}
       this.dataset.confirmed="";this.textContent="Save";
       const existing=window.currentSaleIndex!==null?window.savedSales[window.currentSaleIndex]:null;
@@ -458,11 +485,11 @@ window.addEventListener("DOMContentLoaded", function () {
         createdAt:existing?.createdAt||nowTS(),
         postedAt:existing?.postedAt||null,
         voidedAt:existing?.voidedAt||null,
-        rows:[...salesBody.children].map(r=>({
+        rows:[...salesBody.children].map((r,i)=>({
           date:r.querySelector(".s-date").value,
           desc:r.querySelector(".s-desc").value,
           account:r.querySelector(".account-select").value,
-          net:parseFloat(r.querySelector(".s-net").value)||0,
+          net:amounts.values[i],
           tax:r.querySelector(".s-tax").value
         }))
       };
@@ -475,6 +502,7 @@ window.addEventListener("DOMContentLoaded", function () {
     document.getElementById("postSaleBtn").onclick=function(){
       if(window.currentSaleIndex===null) return;
       const cEl=document.getElementById("salesCustomer");
+      if(!canPost(window.savedSales[window.currentSaleIndex],"sales",cEl,this)) return;
       if(!this.dataset.confirmed){window.showInlineError(cEl,"Tap Post again to finalize",true);this.dataset.confirmed="true";this.textContent="Confirm Post";return;}
       this.dataset.confirmed="";this.textContent="Post";
       const rec=window.savedSales[window.currentSaleIndex];
@@ -630,6 +658,8 @@ window.addEventListener("DOMContentLoaded", function () {
       window.clearInlineError(sEl); window.clearInlineError(rEl);
       if(!supplier){window.showInlineError(sEl,"Supplier name is required");return;}
       if(reference&&window.isDuplicateRef(window.savedPurchases,reference,window.currentPurchaseIndex)){window.showInlineError(rEl,"Reference already exists");return;}
+      const amounts=checkRowAmounts(purchaseBody,".p-net");
+      if(!amounts.ok){this.dataset.confirmed="";this.textContent="Save";return;}
       if(!this.dataset.confirmed){window.showInlineError(sEl,"Tap Save again to confirm",true);this.dataset.confirmed="true";this.textContent="Confirm Save";return;}
       this.dataset.confirmed="";this.textContent="Save";
       const existing=window.currentPurchaseIndex!==null?window.savedPurchases[window.currentPurchaseIndex]:null;
@@ -641,11 +671,11 @@ window.addEventListener("DOMContentLoaded", function () {
         createdAt:existing?.createdAt||nowTS(),
         postedAt:existing?.postedAt||null,
         voidedAt:existing?.voidedAt||null,
-        rows:[...purchaseBody.children].map(r=>({
+        rows:[...purchaseBody.children].map((r,i)=>({
           date:r.querySelector(".p-date").value,
           desc:r.querySelector(".p-desc").value,
           account:r.querySelector(".account-select").value,
-          net:parseFloat(r.querySelector(".p-net").value)||0,
+          net:amounts.values[i],
           tax:r.querySelector(".p-tax").value
         }))
       };
@@ -658,6 +688,7 @@ window.addEventListener("DOMContentLoaded", function () {
     document.getElementById("postPurchaseBtn").onclick=function(){
       if(window.currentPurchaseIndex===null) return;
       const sEl=document.getElementById("purchaseSupplier");
+      if(!canPost(window.savedPurchases[window.currentPurchaseIndex],"purchases",sEl,this)) return;
       if(!this.dataset.confirmed){window.showInlineError(sEl,"Tap Post again to finalize",true);this.dataset.confirmed="true";this.textContent="Confirm Post";return;}
       this.dataset.confirmed="";this.textContent="Post";
       const rec=window.savedPurchases[window.currentPurchaseIndex];

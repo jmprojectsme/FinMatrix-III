@@ -80,15 +80,13 @@ test("TC-06.4 calcGross matches journal (3 x 0.04)", { todo: "Audit: calcGross d
   const [dr] = totals(je("sales", "Cash", rows));
   assert.equal(c(W.calcGross(rows)), dr);
 });
-// Every JE line must be a whole number of centavos; per-line rounding in the test would otherwise hide errors.
-const wholeCentavos = e => e.every(l => [l.debit, l.credit].every(x => Math.abs(x * 100 - Math.round(x * 100)) < 1e-6));
-test("TC-06.3 net with 3 decimals yields whole-centavo, balanced JE", { todo: "B2: net not rounded to centavos" }, () => {
-  const e = je("sales", "Cash", [{ net: 10.005, tax: "VAT", account: "Sales Revenue" }]);
-  assert.ok(wholeCentavos(e), "lines must be whole centavos: " + JSON.stringify(e));
-  const rows = Array.from({ length: 50 }, () => ({ net: 0.125, tax: "VAT", account: "Sales Revenue" }));
-  const e50 = je("sales", "Cash", rows);
-  const dr = e50.reduce((s, l) => s + l.debit, 0), cr = e50.reduce((s, l) => s + l.credit, 0);
-  assert.ok(Math.abs(dr - cr) < 0.005, `50 x 0.125 out of balance by ${(dr - cr).toFixed(2)}`);
+// TC-06.3 (B2): amounts with more than 2 decimals are rejected before they reach the
+// posting engine (policy: reject, do not auto-round). See also tests/ui-validation.test.js.
+test("TC-06.3 more than 2 decimals is rejected (Save and Post)", () => {
+  assert.equal(W.validateAmount("10.005").ok, false);
+  assert.equal(W.validateAmount("10.005").error, "Use at most 2 decimal places");
+  const errs = W.validateDocumentForPost(doc("Cash", [{ date: "2026-01-05", net: 10.005, tax: "VAT", account: "Sales Revenue" }]), "sales");
+  assert.ok(errs.some(e => e.includes("at most 2 decimal places")), errs.join("|"));
 });
 test("TC-06.5 1000 lines x 0.10 VAT = 110.00", () => {
   const rows = Array.from({ length: 1000 }, () => ({ net: 0.10, tax: "VAT", account: "Sales Revenue" }));
@@ -104,10 +102,44 @@ test("TC-06.7 exhaustive 0.01..100.00 balances", () => {
       }
 });
 
-// ---------- TC-07 : invalid amounts (engine level) ----------
-test("TC-07.1 negative net must not produce unbalanced JE", { todo: "B3: negative amounts accepted" }, () => {
-  const [dr, cr] = totals(je("sales", "Cash", [{ net: -100, tax: "VAT", account: "Sales Revenue" }]));
-  assert.equal(dr, cr);
+// ---------- TC-07 : invalid amounts ----------
+// TC-07.1 (B3): negative amounts are rejected before they reach the posting engine.
+test("TC-07.1 negative amount is rejected (Save and Post)", () => {
+  assert.equal(W.validateAmount("-100").error, "Amount cannot be negative");
+  const errs = W.validateDocumentForPost(doc("Cash", [{ date: "2026-01-05", net: -100, tax: "VAT", account: "Sales Revenue" }]), "sales");
+  assert.ok(errs.some(e => e.includes("cannot be negative")), errs.join("|"));
+});
+
+test("validateAmount: what is accepted on Save", () => {
+  const ok = { "": 0, "0": 0, "100": 100, "100.5": 100.5, "100.50": 100.5, "1234.56": 1234.56,
+               "10.500": 10.5, ".5": 0.5, " 25 ": 25, "999999999.99": 999999999.99 };
+  for (const [raw, value] of Object.entries(ok)) {
+    const r = W.validateAmount(raw);
+    assert.ok(r.ok, `"${raw}" should be accepted: ${r.error}`);
+    assert.equal(r.value, value, `"${raw}"`);
+  }
+});
+test("validateAmount: what is rejected on Save", () => {
+  const bad = { "-1": "Amount cannot be negative", "-0.01": "Amount cannot be negative",
+                "10.005": "Use at most 2 decimal places", "0.001": "Use at most 2 decimal places",
+                "abc": "Enter a valid amount", "1e3": "Enter a valid amount", "1,000": "Enter a valid amount",
+                "12.3.4": "Enter a valid amount", "1000000000": "Amount is too large" };
+  for (const [raw, error] of Object.entries(bad)) assert.equal(W.validateAmount(raw).error, error, `"${raw}"`);
+});
+
+test("validateDocumentForPost: complete document has no errors", () => {
+  assert.deepEqual([...W.validateDocumentForPost(doc("Bank", [
+    { date: "2026-01-05", net: 100, tax: "VAT", account: "Sales Revenue" },
+    { date: "2026-01-05", net: 50.25, tax: "None", account: "Service Revenue" }]), "sales")], []);
+});
+test("validateDocumentForPost: lists every problem by line", () => {
+  const errs = [...W.validateDocumentForPost(doc("Cash", [
+    { date: "", net: 100, tax: "VAT", account: "Rent Expense" },
+    { date: "2026-01-05", net: 0, tax: "VAT", account: "" }]), "purchases")];
+  assert.deepEqual(errs, ["Line 1: date is required", "Line 2: account is required", "Line 2: amount must be greater than 0"]);
+});
+test("validateDocumentForPost: no lines", () => {
+  assert.deepEqual([...W.validateDocumentForPost(doc("Cash", []), "sales")], ["Add at least one line before posting"]);
 });
 
 // ---------- TC-08 : property test ----------
