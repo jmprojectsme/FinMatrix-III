@@ -33,14 +33,13 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 - [x] Sample transaction test sheet for manual testing — `docs/SAMPLE_TRANSACTION_TEST.md`
 - [x] Automated tests on GitHub Actions — `.github/workflows/tests.yml`, `tests/` (see `tests/README.md`)
   - 35 tests: 30 pass, 5 `todo` (known bugs, reported but not failing the build)
-- [x] **B1 fix — Sales Payment Method is saved and used for posting** (commit `d709dbe`)
+- [x] **B1 fix — Sales Payment Method is saved and used for posting** (commit `d709dbe`, merged into `main` via PR #1)
   - Cash → Dr Cash on Hand, Bank → Dr Cash in Bank, Credit → Dr Accounts Receivable
   - Existing records unchanged
   - **Tested by the owner in Spck preview: all results correct** (Cash 11,200; Bank 56,000; AR 5,000; BS 72,200 balanced; IS 65,000)
 
 ## 4. Waiting on the owner
 
-- [ ] **Approve merging B1 into `main`** (say "merge" → open PR → tests ✅ → merge)
 - [ ] Protect `main` in GitHub: Settings → Branches/Rulesets → require pull request + status check `test`
 - [ ] Answer the open policy questions (section 7) so `ACCOUNTING_RULES.md` can be written
 
@@ -49,7 +48,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 ## 5. Roadmap (agreed order)
 
 ### Phase A — Accounting logic (make it robust)
-1. [x] B1 — Sales payment method *(done, awaiting merge)*
+1. [x] B1 — Sales payment method *(merged, PR #1)*
 2. [ ] Input validation — reject negative amounts, more than 2 decimals, empty documents, lines without account/date (B2, B3, B4)
 3. [ ] XSS escaping of user text (B28) — small, protects client data; do early
 4. [ ] One date per document (B14)
@@ -97,6 +96,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 | Topic | Decision |
 |---|---|
 | Existing sales saved as "Credit" before B1 | Left unchanged; owner may void and re-enter if some were really cash/bank |
+| App updates reaching installed phones | Bump `CACHE_NAME` in `sw.js` in every release that changes app files (2.0.1 = B1 fix). Proper fix for updates is in Phase B |
 | Known bugs in tests | Marked `todo` until fixed; remove `todo` when the fix lands |
 | Money in tests | Compared in centavos; every journal line must be whole centavos |
 | Scope | Xero-level core bookkeeping + Philippine/BIR features; not ERP scope (no inventory/payroll/manufacturing for now) |
