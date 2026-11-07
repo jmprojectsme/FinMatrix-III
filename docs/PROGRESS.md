@@ -74,7 +74,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 ### Phase B — Data safety & reliability
 - [ ] Backup **restore**, backup reminders, `navigator.storage.persist()`, delete draft
 - [ ] Offline start from home screen; "new version available" update prompt (service worker B23, B24, B25)
-- [ ] Portrait orientation (manifest B27)
+- [ ] Manifest: replace the icon used as a "screenshot" with real screenshots; split `maskable` / `any` icons (rest of B27)
 
 ### Phase C — Compliance & reports
 - [ ] Sequential document numbering (invoices/ORs)
@@ -114,6 +114,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 | Existing sales saved as "Credit" before B1 | Left unchanged; owner may void and re-enter if some were really cash/bank |
 | Testing new versions on the phone | Spck Pull is a paid feature. Use a raw.githack link to the exact commit (separate storage; do not install it), or re-clone / ZIP |
 | App updates reaching installed phones | Bump `CACHE_NAME` in `sw.js` in every release that changes app files (2.0.1 = B1 fix). Proper fix for updates is in Phase B |
+| Screen orientation (owner decision) | **Landscape is intentional** — wide tables (lines, reports) fit better on a phone. Keep `"orientation": "landscape"` in `manifest.json`; B27's orientation point is closed as *won't change*. Check layouts in landscape |
 | Document date (agreed, Option A) | One date per sale/purchase at the top of the form (like Xero invoice date / BIR invoice). It decides the period and VAT quarter in every report. Older documents: first line's date |
 | Validation policy (agreed) | More than 2 decimals → **reject** (no auto-round). Zero-amount lines → **block posting**. Basic checks on Save, full checks on Post (drafts may be incomplete, like Xero) |
 | Known bugs in tests | Marked `todo` until fixed; remove `todo` when the fix lands |
