@@ -37,6 +37,10 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
   - Cash → Dr Cash on Hand, Bank → Dr Cash in Bank, Credit → Dr Accounts Receivable
   - Existing records unchanged
   - **Tested by the owner in Spck preview: all results correct** (Cash 11,200; Bank 56,000; AR 5,000; BS 72,200 balanced; IS 65,000)
+- [x] **Input validation (B2, B3, B4)** — **tested by the owner on the phone (Part 4, V1–V10: all pass)**, merged into `main` via PR #2
+  - Save: amounts must be valid, not negative, max 2 decimals (drafts may be incomplete)
+  - Post: at least one line; each line needs date, account, amount > 0; entry must balance
+  - Old records are not changed; invalid old drafts simply cannot be posted until corrected
 
 ## 4. Waiting on the owner
 
@@ -49,7 +53,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 
 ### Phase A — Accounting logic (make it robust)
 1. [x] B1 — Sales payment method *(merged, PR #1)*
-2. [ ] Input validation — reject negative amounts, more than 2 decimals, empty documents, lines without account/date (B2, B3, B4)
+2. [x] Input validation — reject negative amounts, more than 2 decimals, empty documents, lines without account/date (B2, B3, B4) *(merged, PR #2)*
 3. [ ] XSS escaping of user text (B28) — small, protects client data; do early
 4. [ ] One date per document (B14)
 5. [ ] Balance Sheet cumulative "as of"; "Period: All" labels (B18, B22)
@@ -96,7 +100,9 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 | Topic | Decision |
 |---|---|
 | Existing sales saved as "Credit" before B1 | Left unchanged; owner may void and re-enter if some were really cash/bank |
+| Testing new versions on the phone | Spck Pull is a paid feature. Use a raw.githack link to the exact commit (separate storage; do not install it), or re-clone / ZIP |
 | App updates reaching installed phones | Bump `CACHE_NAME` in `sw.js` in every release that changes app files (2.0.1 = B1 fix). Proper fix for updates is in Phase B |
+| Validation policy (agreed) | More than 2 decimals → **reject** (no auto-round). Zero-amount lines → **block posting**. Basic checks on Save, full checks on Post (drafts may be incomplete, like Xero) |
 | Known bugs in tests | Marked `todo` until fixed; remove `todo` when the fix lands |
 | Money in tests | Compared in centavos; every journal line must be whole centavos |
 | Scope | Xero-level core bookkeeping + Philippine/BIR features; not ERP scope (no inventory/payroll/manufacturing for now) |

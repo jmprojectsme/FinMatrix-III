@@ -90,6 +90,51 @@ window.isDuplicateRef = function (list, ref, currentIndex) {
   return list.some((x,i) => i !== currentIndex && x.reference?.toLowerCase() === lo);
 };
 
+// ── Validation (audit B2, B3, B4) ─────────────────
+window.MAX_AMOUNT = 999999999.99;
+
+// Checks one amount as typed in an input box (a string).
+// Returns { ok, value, empty, error }. An empty box is allowed on Save (draft).
+window.validateAmount = function (raw) {
+  const s = String(raw ?? "").trim();
+  if (s === "") return { ok:true, value:0, empty:true, error:null };
+  if (s.startsWith("-")) return { ok:false, value:null, empty:false, error:"Amount cannot be negative" };
+  if (!/^(\d+(\.\d*)?|\.\d+)$/.test(s)) return { ok:false, value:null, empty:false, error:"Enter a valid amount" };
+  const v = Number(s);
+  if (Math.abs(v*100 - Math.round(v*100)) > 1e-6)
+    return { ok:false, value:null, empty:false, error:"Use at most 2 decimal places" };
+  if (v > window.MAX_AMOUNT) return { ok:false, value:null, empty:false, error:"Amount is too large" };
+  return { ok:true, value:Math.round(v*100)/100, empty:false, error:null };
+};
+
+// Full checks before a saved document is posted.
+// Returns a list of error messages; an empty list means it can be posted.
+window.validateDocumentForPost = function (doc, type) {
+  const errors = [];
+  const rows = doc?.rows || [];
+  if (!rows.length) return ["Add at least one line before posting"];
+  rows.forEach((r, i) => {
+    const n = `Line ${i+1}`;
+    if (!r.date)    errors.push(`${n}: date is required`);
+    if (!r.account) errors.push(`${n}: account is required`);
+    const net = r.net;
+    if (typeof net !== "number" || !isFinite(net))      errors.push(`${n}: enter a valid amount`);
+    else if (net < 0)                                   errors.push(`${n}: amount cannot be negative`);
+    else if (net === 0)                                 errors.push(`${n}: amount must be greater than 0`);
+    else if (Math.abs(net*100 - Math.round(net*100)) > 1e-6) errors.push(`${n}: use at most 2 decimal places`);
+    else if (net > window.MAX_AMOUNT)                   errors.push(`${n}: amount is too large`);
+    if (r.tax !== "VAT" && r.tax !== "None")            errors.push(`${n}: tax must be VAT or None`);
+  });
+  if (!errors.length) {
+    // Final guard: the journal entry must balance to the centavo
+    const c = x => Math.round(x * 100);
+    const e = window.generateJournalEntries(doc, type);
+    const dr = e.reduce((s, l) => s + c(l.debit), 0), cr = e.reduce((s, l) => s + c(l.credit), 0);
+    if (dr !== cr) errors.push("Journal entry does not balance");
+  }
+  return errors;
+};
+
 window.statusBadge = function (s) {
   if (s === "VOID")   return `<span class="badge void">VOID</span>`;
   if (s === "POSTED") return `<span class="badge posted">POSTED</span>`;

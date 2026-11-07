@@ -187,9 +187,26 @@ These are already in the audit and will be fixed one by one. Record what you see
 | Home page → Net Income (after Part 2) | 54,000.00 | 24,000.00 (counts PPE as expense) | B17 | |
 | Balance Sheet with From **2026-02-01**, To 2026-03-31 | Total Assets 67,920.00 (BS is cumulative) | Total Assets 1,000.00 | B18 | |
 | Report header with no dates | "Period: All → All" | "Period: — → —" | B22 | |
-| Sale with Net **-100** | Rejected with an error | Accepted | B3 | |
-| Sale with Net **10.005** | Rejected or rounded to 10.01 | Accepted; entry off by 0.005 | B2 | |
 | Customer name `<b>Test</b>` | Shows the text `<b>Test</b>` literally | Shows **Test** in bold (HTML runs) | B28 | |
+
+---
+
+## Part 4 — Input validation (B2, B3, B4)
+
+Use a fresh, empty copy. For each check, start with **+ Add New**.
+
+| # | Do this | Expected | Actual | ✓/✗ |
+|---|---|---|---|---|
+| V1 | Sale, Net **-100**, tap Save | Red message under the amount: **"Amount cannot be negative"**; nothing saved | | |
+| V2 | Sale, Net **10.005**, tap Save | **"Use at most 2 decimal places"**; nothing saved | | |
+| V3 | Change V2's amount to **10.05**, tap Save twice | Saves normally | | |
+| V4 | Purchase, Net **-50**, tap Save | **"Amount cannot be negative"**; nothing saved | | |
+| V5 | Sale with date and amount but **no account**, Save, open it, tap Post | Saves as Draft; Post shows **"Cannot post: Line 1: account is required"**; stays DRAFT | | |
+| V6 | Sale with account and amount but **no date**, Save, Post | **"Cannot post: Line 1: date is required"** | | |
+| V7 | Sale with two lines: line 1 = 100, line 2 = **0**, Save, Post | **"Cannot post: Line 2: amount must be greater than 0"** | | |
+| V8 | Sale, delete the only line (×), Save, Post | **"Cannot post: Add at least one line before posting"** | | |
+| V9 | Open V5, tap **Edit**, choose an account, Save, open, Post | Posts normally | | |
+| V10 | Complete Cash sale (date, account, 1000, VAT) → Save → Post | Posts normally: Dr Cash on Hand 1,120 / Cr Sales Revenue 1,000 / Cr Output VAT 120 | | |
 
 ---
 
@@ -200,6 +217,7 @@ These are already in the audit and will be fixed one by one. Record what you see
 | Part 1 — B1 fix | ☐ All pass ☐ Some fail |
 | Part 2 — Month-end figures | ☐ All pass ☐ Some fail |
 | Part 3 — Known bugs recorded | ☐ Done |
+| Part 4 — Input validation | ☐ All pass ☐ Some fail |
 
 **Comments:** _______________________________________________________________
 
