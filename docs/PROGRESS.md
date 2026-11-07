@@ -39,6 +39,10 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
   - **Tested by the owner in Spck preview: all results correct** (Cash 11,200; Bank 56,000; AR 5,000; BS 72,200 balanced; IS 65,000)
 - [x] **Input validation (B2, B3, B4)** — **tested by the owner on the phone (Part 4, V1–V10: all pass)**, merged into `main` via PR #2
 - [x] **XSS escaping (B28) + group names with quotes (B12)** — **tested by the owner on the phone (Part 5, X1–X8: all pass)**, merged into `main` via PR #3
+- [ ] **One date per document (B14)** — on the working branch, waiting for owner testing (`docs/SAMPLE_TRANSACTION_TEST.md`, Part 6), then merge
+  - Date field at the top of Sales and Purchases; no date on each line
+  - Every report uses the document date, so a document is always in one period
+  - Older documents use their first line's date; stored data unchanged. For an older document whose lines had different dates, Sales/Purchases by Account now agrees with the Income Statement (whole document in the first line's period)
   - Everything users type is shown as plain text on every screen; nothing can run as code
   - Stored data is unchanged; only the display is made safe
   - Save: amounts must be valid, not negative, max 2 decimals (drafts may be incomplete)
@@ -58,7 +62,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 1. [x] B1 — Sales payment method *(merged, PR #1)*
 2. [x] Input validation — reject negative amounts, more than 2 decimals, empty documents, lines without account/date (B2, B3, B4) *(merged, PR #2)*
 3. [x] XSS escaping of user text (B28), plus Chart of Accounts group names with quotes (B12) *(merged, PR #3)*
-4. [ ] One date per document (B14)
+4. [x] One date per document (B14) — Option A: one Date at the top of the form, like Xero *(built and tested on branch; awaiting owner test + merge)*
 5. [ ] Balance Sheet cumulative "as of"; "Period: All" labels (B18, B22)
 6. [ ] Chart of Accounts safety — account IDs & types, protected system accounts, no duplicates/lost accounts (B7–B11)
 7. [ ] Report accuracy — TB net balances & ordering, IS sections (Gross Profit etc.), Home Net Income = IS (B13, B16, B17)
@@ -110,6 +114,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 | Existing sales saved as "Credit" before B1 | Left unchanged; owner may void and re-enter if some were really cash/bank |
 | Testing new versions on the phone | Spck Pull is a paid feature. Use a raw.githack link to the exact commit (separate storage; do not install it), or re-clone / ZIP |
 | App updates reaching installed phones | Bump `CACHE_NAME` in `sw.js` in every release that changes app files (2.0.1 = B1 fix). Proper fix for updates is in Phase B |
+| Document date (agreed, Option A) | One date per sale/purchase at the top of the form (like Xero invoice date / BIR invoice). It decides the period and VAT quarter in every report. Older documents: first line's date |
 | Validation policy (agreed) | More than 2 decimals → **reject** (no auto-round). Zero-amount lines → **block posting**. Basic checks on Save, full checks on Post (drafts may be incomplete, like Xero) |
 | Known bugs in tests | Marked `todo` until fixed; remove `todo` when the fix lands |
 | Money in tests | Compared in centavos; every journal line must be whole centavos |

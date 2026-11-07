@@ -134,9 +134,9 @@ test("validateDocumentForPost: complete document has no errors", () => {
 });
 test("validateDocumentForPost: lists every problem by line", () => {
   const errs = [...W.validateDocumentForPost(doc("Cash", [
-    { date: "", net: 100, tax: "VAT", account: "Rent Expense" },
-    { date: "2026-01-05", net: 0, tax: "VAT", account: "" }]), "purchases")];
-  assert.deepEqual(errs, ["Line 1: date is required", "Line 2: account is required", "Line 2: amount must be greater than 0"]);
+    { net: 100, tax: "VAT", account: "Rent Expense" },
+    { net: 0, tax: "VAT", account: "" }]), "purchases")];
+  assert.deepEqual(errs, ["Date is required", "Line 2: account is required", "Line 2: amount must be greater than 0"]);
 });
 test("validateDocumentForPost: no lines", () => {
   assert.deepEqual([...W.validateDocumentForPost(doc("Cash", []), "sales")], ["Add at least one line before posting"]);

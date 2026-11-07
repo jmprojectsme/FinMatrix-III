@@ -69,11 +69,11 @@ for (const kind of ["sale", "purchase"]) {
     assert.ok(errorsShown(w).some(e => e.includes("Line 1: account is required")), errorsShown(w).join("|"));
   });
 
-  test(T("TC-07.6 Post is blocked when a line has no date"), async () => {
+  test(T("TC-07.6 Post is blocked when the document has no date"), async () => {
     const w = await openApp();
     const i = await enter(w, kind, { name: "X", rows: [{ account: line.account, net: "100", tax: "VAT" }] });
     assert.equal(await post(w, kind, i), false);
-    assert.ok(errorsShown(w).some(e => e.includes("Line 1: date is required")));
+    assert.ok(errorsShown(w).some(e => e.includes("Date is required")), errorsShown(w).join("|"));
   });
 
   test(T("TC-07.2 Post is blocked when any line has a zero amount"), async () => {

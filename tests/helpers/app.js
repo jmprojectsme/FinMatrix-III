@@ -46,25 +46,28 @@ function setValue(w, el, value) {
 
 // Settings for the two document types (sales / purchases).
 const KIND = {
-  sale: { page: "revenue", list: "savedSales", name: "salesCustomer", pay: "salesPaymentMethod",
+  sale: { page: "revenue", list: "savedSales", name: "salesCustomer", date: "salesDate", pay: "salesPaymentMethod",
           body: "salesTableBody", listBody: "salesListTableBody", add: "addNewSaleBtn",
           addRow: "addSalesRowBtn", save: "saveSaleBtn", post: "postSaleBtn", cls: "s", type: "sales" },
-  purchase: { page: "bills", list: "savedPurchases", name: "purchaseSupplier", pay: "purchasePaymentMethod",
+  purchase: { page: "bills", list: "savedPurchases", name: "purchaseSupplier", date: "purchaseDate", pay: "purchasePaymentMethod",
           body: "purchaseTableBody", listBody: "purchaseListTableBody", add: "addNewPurchaseBtn",
           addRow: "addPurchaseRowBtn", save: "savePurchaseBtn", post: "postPurchaseBtn", cls: "p", type: "purchases" }
 };
 
-// Fill a new document form. rows: [{date, account, net, tax}]. Does not save.
-function fillNew(w, kind, { name, payment, rows }) {
+// Fill a new document form. Does not save.
+// date: the document date (top of the form). For convenience, if it isn't given,
+// the first row's `date` is used. rows: [{account, net, tax}].
+function fillNew(w, kind, { name, payment, date, rows }) {
   const k = KIND[kind];
   w.showPage(k.page);
   tap(w, k.add);
   setValue(w, $(w, k.name), name);
   if (payment) setValue(w, $(w, k.pay), payment);
+  const docDate = date !== undefined ? date : rows[0]?.date;
+  if (docDate !== undefined) setValue(w, $(w, k.date), docDate);
   rows.forEach((r, i) => {
     if (i > 0) tap(w, k.addRow);
     const tr = $(w, k.body).querySelectorAll("tr")[i];
-    if (r.date !== undefined)    setValue(w, tr.querySelector(`.${k.cls}-date`), r.date);
     if (r.account !== undefined) setValue(w, tr.querySelector(".account-select"), r.account);
     if (r.net !== undefined)     setValue(w, tr.querySelector(`.${k.cls}-net`), String(r.net));
     if (r.tax !== undefined)     setValue(w, tr.querySelector(`.${k.cls}-tax`), r.tax);
