@@ -211,3 +211,12 @@ test("TC-12.3 deleting Rent Expense does not change NI", { todo: "B9/B15: report
 test("BASE: default COA has 47 accounts", () => {
   assert.equal(Object.values(W.COA).reduce((s, g) => s + Object.values(g).flat().length, 0), 47);
 });
+
+// ---------- B28 : escaping user text for display ----------
+test("escapeHtml turns HTML characters into safe text", () => {
+  assert.equal(W.escapeHtml(`<b>"Tom's" & Co</b>`), "&lt;b&gt;&quot;Tom&#39;s&quot; &amp; Co&lt;/b&gt;");
+  assert.equal(W.escapeHtml("Juan dela Cruz"), "Juan dela Cruz");
+  assert.equal(W.escapeHtml(null), "");
+  assert.equal(W.escapeHtml(undefined), "");
+  assert.equal(W.escapeHtml(1234.5), "1234.5");
+});

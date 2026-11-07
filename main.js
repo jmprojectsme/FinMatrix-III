@@ -13,7 +13,9 @@ window.addEventListener("DOMContentLoaded", function () {
 
     let overviewChart = null;
     function nowTS()    { return window.nowTimestamp(); }
-    function fmtDate(s) { return window.formatDate(s); }
+    // B28: everything typed by users is escaped before it is put on the page as HTML
+    const esc = window.escapeHtml;
+    function fmtDate(s) { return esc(window.formatDate(s)); }
 
     function paymentBadge(pm) {
       const map = {
@@ -25,7 +27,7 @@ window.addEventListener("DOMContentLoaded", function () {
         Bank:    `<span class="badge bank">Bank</span>`,
         Credit:  `<span class="badge credit">Credit</span>`,
       };
-      return map[pm] || `<span class="badge draft">${pm||"—"}</span>`;
+      return map[pm] || `<span class="badge draft">${esc(pm||"—")}</span>`;
     }
 
     // ── Payment Section Helpers ───────────────────────
@@ -241,7 +243,7 @@ window.addEventListener("DOMContentLoaded", function () {
           .map(x=>`
             <div class="recent-item" data-type="${type}" data-index="${x._i}">
               <div>
-                <div class="ri-name">${x[nameKey]}</div>
+                <div class="ri-name">${esc(x[nameKey])}</div>
                 <div class="ri-date">${fmtDate(x.rows[0]?.date||"")}</div>
               </div>
               <div class="ri-amount">${window.calcGross(x.rows).toFixed(2)}</div>
@@ -356,10 +358,10 @@ window.addEventListener("DOMContentLoaded", function () {
       const tr=document.createElement("tr");
       const acc=window.createAccountDropdown("sales",data.account||"");
       tr.innerHTML=`
-        <td><input type="date" class="s-date" value="${data.date||""}"></td>
-        <td><textarea class="s-desc row-textarea" rows="1" placeholder="Description">${(data.desc||"").replace(/</g,"&lt;")}</textarea></td>
+        <td><input type="date" class="s-date" value="${esc(data.date||"")}"></td>
+        <td><textarea class="s-desc row-textarea" rows="1" placeholder="Description">${esc(data.desc||"")}</textarea></td>
         <td class="acc-cell"></td>
-        <td><input type="number" class="s-net" min="0" step="0.01" value="${data.net||""}"></td>
+        <td><input type="number" class="s-net" min="0" step="0.01" value="${esc(data.net||"")}"></td>
         <td class="s-vat num">0.00</td>
         <td><select class="s-tax"><option value="VAT">VAT</option><option value="None">None</option></select></td>
         <td><button type="button" class="btn-del" title="Remove">×</button></td>`;
@@ -424,7 +426,7 @@ window.addEventListener("DOMContentLoaded", function () {
       [...list].reverse().forEach(s=>{
         const i=window.savedSales.indexOf(s);
         const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${fmtDate(s.rows[0]?.date||"")}</td><td>${s.customer}</td><td>${s.tin||"—"}</td><td>${s.reference||"—"}</td><td>${paymentBadge(s.paymentMethod||"Credit")}</td><td class="amount-cell">${window.calcGross(s.rows).toFixed(2)}</td><td>${window.statusBadge(s.status)}</td>`;
+        tr.innerHTML=`<td>${fmtDate(s.rows[0]?.date||"")}</td><td>${esc(s.customer)}</td><td>${esc(s.tin||"—")}</td><td>${esc(s.reference||"—")}</td><td>${paymentBadge(s.paymentMethod||"Credit")}</td><td class="amount-cell">${window.calcGross(s.rows).toFixed(2)}</td><td>${window.statusBadge(s.status)}</td>`;
         tr.onclick=()=>openSale(i);
         tbody.appendChild(tr);
       });
@@ -550,10 +552,10 @@ window.addEventListener("DOMContentLoaded", function () {
       const tr=document.createElement("tr");
       const acc=window.createAccountDropdown("purchases",data.account||"");
       tr.innerHTML=`
-        <td><input type="date" class="p-date" value="${data.date||""}"></td>
-        <td><textarea class="p-desc row-textarea" rows="1" placeholder="Description">${(data.desc||"").replace(/</g,"&lt;")}</textarea></td>
+        <td><input type="date" class="p-date" value="${esc(data.date||"")}"></td>
+        <td><textarea class="p-desc row-textarea" rows="1" placeholder="Description">${esc(data.desc||"")}</textarea></td>
         <td class="acc-cell"></td>
-        <td><input type="number" class="p-net" min="0" step="0.01" value="${data.net||""}"></td>
+        <td><input type="number" class="p-net" min="0" step="0.01" value="${esc(data.net||"")}"></td>
         <td class="p-vat num">0.00</td>
         <td><select class="p-tax"><option value="VAT">VAT</option><option value="None">None</option></select></td>
         <td><button type="button" class="btn-del" title="Remove">×</button></td>`;
@@ -616,7 +618,7 @@ window.addEventListener("DOMContentLoaded", function () {
       [...list].reverse().forEach(p=>{
         const i=window.savedPurchases.indexOf(p);
         const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${fmtDate(p.rows[0]?.date||"")}</td><td>${p.supplier}</td><td>${p.tin||"—"}</td><td>${p.reference||"—"}</td><td>${paymentBadge(p.paymentMethod||"Credit")}</td><td class="amount-cell">${window.calcGross(p.rows).toFixed(2)}</td><td>${window.statusBadge(p.status)}</td>`;
+        tr.innerHTML=`<td>${fmtDate(p.rows[0]?.date||"")}</td><td>${esc(p.supplier)}</td><td>${esc(p.tin||"—")}</td><td>${esc(p.reference||"—")}</td><td>${paymentBadge(p.paymentMethod||"Credit")}</td><td class="amount-cell">${window.calcGross(p.rows).toFixed(2)}</td><td>${window.statusBadge(p.status)}</td>`;
         tr.onclick=()=>openPurchase(i);
         tbody.appendChild(tr);
       });
@@ -726,12 +728,12 @@ window.addEventListener("DOMContentLoaded", function () {
         all.map(t=>{
           const entries=window.generateJournalEntries(t,t._type==="sale"?"sales":"purchases");
           let rows="";let dr=0,cr=0;
-          entries.forEach(e=>{dr+=e.debit;cr+=e.credit;rows+=`<tr><td class="${e.debit>0?"":"cr-indent"}">${e.account}</td><td class="num">${e.debit>0?e.debit.toFixed(2):""}</td><td class="num">${e.credit>0?e.credit.toFixed(2):""}</td></tr>`;});
+          entries.forEach(e=>{dr+=e.debit;cr+=e.credit;rows+=`<tr><td class="${e.debit>0?"":"cr-indent"}">${esc(e.account)}</td><td class="num">${e.debit>0?e.debit.toFixed(2):""}</td><td class="num">${e.credit>0?e.credit.toFixed(2):""}</td></tr>`;});
           return `<div class="je-block">
             <div class="je-header">
               <span class="je-date">${fmtDate(t.rows[0]?.date||"")}</span>
-              <span class="je-party">${t._party}</span>
-              <span class="je-ref">${t.reference||"—"}</span>
+              <span class="je-party">${esc(t._party)}</span>
+              <span class="je-ref">${esc(t.reference||"—")}</span>
               <span class="je-badge ${t._type}">${t._type==="sale"?"Sale":"Purchase"}</span>
             </div>
             <table class="journal-table"><thead><tr><th>Account</th><th>Debit</th><th>Credit</th></tr></thead>
@@ -763,7 +765,7 @@ window.addEventListener("DOMContentLoaded", function () {
       if(!entries.length) return `<div class="report-section"><h3>${title}</h3><div class="report-empty">No posted transactions.</div></div>`;
       let tN=0,tV=0,tG=0;
       const rows=entries.map(([a,t])=>{tN+=t.net;tV+=t.vat;tG+=t.gross;
-        return `<tr><td>${a}</td><td class="num">${t.net.toFixed(2)}</td><td class="num">${t.vat.toFixed(2)}</td><td class="num"><strong>${t.gross.toFixed(2)}</strong></td></tr>`;
+        return `<tr><td>${esc(a)}</td><td class="num">${t.net.toFixed(2)}</td><td class="num">${t.vat.toFixed(2)}</td><td class="num"><strong>${t.gross.toFixed(2)}</strong></td></tr>`;
       }).join("");
       return `<div class="report-section"><h3>${title}</h3>
         <table class="report-table"><thead><tr><th>Account</th><th class="num">Net</th><th class="num">VAT</th><th class="num">Gross</th></tr></thead>
@@ -790,7 +792,7 @@ window.addEventListener("DOMContentLoaded", function () {
       if(!entries.length) return `<div class="report-section"><h3>Trial Balance</h3><div class="report-empty">No posted transactions.</div></div>`;
       let dr=0,cr=0;
       const rows=entries.map(([a,v])=>{dr+=v.debit;cr+=v.credit;
-        return `<tr><td>${a}</td><td class="num">${v.debit>0?v.debit.toFixed(2):""}</td><td class="num">${v.credit>0?v.credit.toFixed(2):""}</td></tr>`;
+        return `<tr><td>${esc(a)}</td><td class="num">${v.debit>0?v.debit.toFixed(2):""}</td><td class="num">${v.credit>0?v.credit.toFixed(2):""}</td></tr>`;
       }).join("");
       const balanced=Math.abs(dr-cr)<0.01;
       return `<div class="report-section"><h3>Trial Balance</h3>
@@ -821,7 +823,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
       const netIncome=totalRevenue-totalExpense;
       const comp=window.companyProfile;
-      const header=comp.name?`<div class="fs-company"><strong>${comp.name}</strong>${comp.tin?` | TIN: ${comp.tin}`:""}</div>`:"";
+      const header=comp.name?`<div class="fs-company"><strong>${esc(comp.name)}</strong>${comp.tin?` | TIN: ${esc(comp.tin)}`:""}</div>`:"";
 
       return `<div class="report-section">
         <h3>Income Statement (Statement of Financial Performance)</h3>
@@ -831,10 +833,10 @@ window.addEventListener("DOMContentLoaded", function () {
           <thead><tr><th>Account</th><th class="num">Amount</th></tr></thead>
           <tbody>
             <tr class="fs-section-header"><td colspan="2"><strong>REVENUE</strong></td></tr>
-            ${revRows.map(([a,v])=>`<tr><td class="fs-indent">${a}</td><td class="num">${v.toFixed(2)}</td></tr>`).join("")}
+            ${revRows.map(([a,v])=>`<tr><td class="fs-indent">${esc(a)}</td><td class="num">${v.toFixed(2)}</td></tr>`).join("")}
             <tr class="fs-subtotal"><td><strong>Total Revenue</strong></td><td class="num"><strong>${totalRevenue.toFixed(2)}</strong></td></tr>
             <tr class="fs-section-header"><td colspan="2"><strong>EXPENSES</strong></td></tr>
-            ${expRows.map(([a,v])=>`<tr><td class="fs-indent">${a}</td><td class="num">(${v.toFixed(2)})</td></tr>`).join("")}
+            ${expRows.map(([a,v])=>`<tr><td class="fs-indent">${esc(a)}</td><td class="num">(${v.toFixed(2)})</td></tr>`).join("")}
             <tr class="fs-subtotal"><td><strong>Total Expenses</strong></td><td class="num"><strong>(${totalExpense.toFixed(2)})</strong></td></tr>
           </tbody>
           <tfoot>
@@ -894,7 +896,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
       const comp   = window.companyProfile;
       const header = comp.name
-        ? `<div class="fs-company"><strong>${comp.name}</strong>${comp.tin ? ` | TIN: ${comp.tin}` : ""}</div>`
+        ? `<div class="fs-company"><strong>${esc(comp.name)}</strong>${comp.tin ? ` | TIN: ${esc(comp.tin)}` : ""}</div>`
         : "";
 
       const fmtAmt = v => v < 0 ? `(${Math.abs(v).toFixed(2)})` : v.toFixed(2);
@@ -909,17 +911,17 @@ window.addEventListener("DOMContentLoaded", function () {
           <tbody>
             <tr class="fs-section-header"><td colspan="2"><strong>ASSETS</strong></td></tr>
             ${assetRows.length
-              ? assetRows.map(([a,v])=>`<tr><td class="fs-indent">${a}</td><td class="num">${fmtAmt(v)}</td></tr>`).join("")
+              ? assetRows.map(([a,v])=>`<tr><td class="fs-indent">${esc(a)}</td><td class="num">${fmtAmt(v)}</td></tr>`).join("")
               : `<tr><td class="fs-indent" colspan="2" style="color:#94a3b8">No asset balances — use Cash or Bank payment method to record asset movements</td></tr>`}
             <tr class="fs-subtotal"><td><strong>Total Assets</strong></td><td class="num"><strong>${fmtAmt(totalAssets)}</strong></td></tr>
             <tr class="fs-section-header"><td colspan="2"><strong>LIABILITIES</strong></td></tr>
             ${liabRows.length
-              ? liabRows.map(([a,v])=>`<tr><td class="fs-indent">${a}</td><td class="num">${fmtAmt(v)}</td></tr>`).join("")
+              ? liabRows.map(([a,v])=>`<tr><td class="fs-indent">${esc(a)}</td><td class="num">${fmtAmt(v)}</td></tr>`).join("")
               : `<tr><td class="fs-indent" colspan="2" style="color:#94a3b8">No liability balances</td></tr>`}
             <tr class="fs-subtotal"><td><strong>Total Liabilities</strong></td><td class="num"><strong>${fmtAmt(totalLiab)}</strong></td></tr>
             <tr class="fs-section-header"><td colspan="2"><strong>EQUITY</strong></td></tr>
             ${equityRows.length
-              ? equityRows.map(([a,v])=>`<tr><td class="fs-indent">${a}</td><td class="num">${fmtAmt(v)}</td></tr>`).join("")
+              ? equityRows.map(([a,v])=>`<tr><td class="fs-indent">${esc(a)}</td><td class="num">${fmtAmt(v)}</td></tr>`).join("")
               : `<tr><td class="fs-indent" colspan="2" style="color:#94a3b8">No equity balances</td></tr>`}
             <tr class="fs-subtotal"><td><strong>Total Equity</strong></td><td class="num"><strong>${fmtAmt(totalEquity)}</strong></td></tr>
           </tbody>
@@ -1331,18 +1333,18 @@ window.addEventListener("DOMContentLoaded", function () {
           div.className="coa-group";
           div.innerHTML=`
             <div class="coa-group-header">
-              <span class="coa-group-name">${group}</span>
+              <span class="coa-group-name">${esc(group)}</span>
               <div class="coa-group-actions">
-                <button class="btn-coa-action" data-action="rename-group" data-type="${type}" data-group="${group}">✎</button>
-                <button class="btn-coa-action" data-action="delete-group" data-type="${type}" data-group="${group}">×</button>
+                <button class="btn-coa-action" data-action="rename-group" data-type="${type}" data-group="${esc(group)}">✎</button>
+                <button class="btn-coa-action" data-action="delete-group" data-type="${type}" data-group="${esc(group)}">×</button>
               </div>
             </div>
             <div class="coa-accounts">
-              ${accs.map((a,i)=>`<div class="coa-acc-row"><span>${a}</span><div><button class="btn-coa-action" data-action="rename-acc" data-type="${type}" data-group="${group}" data-index="${i}">✎</button><button class="btn-coa-action" data-action="delete-acc" data-type="${type}" data-group="${group}" data-index="${i}">×</button></div></div>`).join("")||`<div class="coa-empty">No accounts yet.</div>`}
+              ${accs.map((a,i)=>`<div class="coa-acc-row"><span>${esc(a)}</span><div><button class="btn-coa-action" data-action="rename-acc" data-type="${type}" data-group="${esc(group)}" data-index="${i}">✎</button><button class="btn-coa-action" data-action="delete-acc" data-type="${type}" data-group="${esc(group)}" data-index="${i}">×</button></div></div>`).join("")||`<div class="coa-empty">No accounts yet.</div>`}
             </div>
             <div class="coa-add-row">
-              <input type="text" class="new-acc-input" data-type="${type}" data-group="${group}" placeholder="New account name">
-              <button class="btn-add-acc" data-type="${type}" data-group="${group}">Add</button>
+              <input type="text" class="new-acc-input" data-type="${type}" data-group="${esc(group)}" placeholder="New account name">
+              <button class="btn-add-acc" data-type="${type}" data-group="${esc(group)}">Add</button>
             </div>`;
           container.appendChild(div);
         });
@@ -1376,7 +1378,7 @@ window.addEventListener("DOMContentLoaded", function () {
         container.querySelectorAll(".btn-add-acc").forEach(btn=>{
           btn.onclick=()=>{
             const{type:t,group:g}=btn.dataset;
-            const input=container.querySelector(`.new-acc-input[data-group="${g}"]`);
+            const input=btn.parentElement.querySelector(".new-acc-input"); // B12: no selector built from the name
             const val=input.value.trim(); if(!val) return;
             if(window.COA[t][g].includes(val)){alert("Already exists.");return;}
             window.COA[t][g].push(val);input.value="";
@@ -1384,7 +1386,7 @@ window.addEventListener("DOMContentLoaded", function () {
           };
         });
         container.querySelectorAll(".new-acc-input").forEach(inp=>{
-          inp.onkeydown=e=>{if(e.key==="Enter"){const b=container.querySelector(`.btn-add-acc[data-group="${inp.dataset.group}"]`);if(b)b.click();}};
+          inp.onkeydown=e=>{if(e.key==="Enter"){const b=inp.parentElement.querySelector(".btn-add-acc");if(b)b.click();}};
         });
       });
     }
