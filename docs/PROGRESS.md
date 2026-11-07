@@ -38,7 +38,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
   - Existing records unchanged
   - **Tested by the owner in Spck preview: all results correct** (Cash 11,200; Bank 56,000; AR 5,000; BS 72,200 balanced; IS 65,000)
 - [x] **Input validation (B2, B3, B4)** — **tested by the owner on the phone (Part 4, V1–V10: all pass)**, merged into `main` via PR #2
-- [ ] **XSS escaping (B28) + group names with quotes (B12)** — on the working branch, waiting for owner testing (`docs/SAMPLE_TRANSACTION_TEST.md`, Part 5), then merge
+- [x] **XSS escaping (B28) + group names with quotes (B12)** — **tested by the owner on the phone (Part 5, X1–X8: all pass)**, merged into `main` via PR #3
   - Everything users type is shown as plain text on every screen; nothing can run as code
   - Stored data is unchanged; only the display is made safe
   - Save: amounts must be valid, not negative, max 2 decimals (drafts may be incomplete)
@@ -57,7 +57,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 ### Phase A — Accounting logic (make it robust)
 1. [x] B1 — Sales payment method *(merged, PR #1)*
 2. [x] Input validation — reject negative amounts, more than 2 decimals, empty documents, lines without account/date (B2, B3, B4) *(merged, PR #2)*
-3. [x] XSS escaping of user text (B28), plus Chart of Accounts group names with quotes (B12) *(built and tested on branch; awaiting owner test + merge)*
+3. [x] XSS escaping of user text (B28), plus Chart of Accounts group names with quotes (B12) *(merged, PR #3)*
 4. [ ] One date per document (B14)
 5. [ ] Balance Sheet cumulative "as of"; "Period: All" labels (B18, B22)
 6. [ ] Chart of Accounts safety — account IDs & types, protected system accounts, no duplicates/lost accounts (B7–B11)
