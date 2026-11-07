@@ -27,4 +27,4 @@ jobs:
         run: npm run check
 
       - name: Run accounting and app tests
-        run: node --test tests/engine.test.js tests/pwa.test.js tests/ui-sales.test.js tests/ui-validation.test.js tests/ui-xss.test.js
+        run: node --test tests/engine.test.js tests/pwa.test.js tests/ui-sales.test.js tests/ui-validation.test.js tests/ui-xss.test.js tests/ui-dates.test.js

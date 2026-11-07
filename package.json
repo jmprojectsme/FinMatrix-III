@@ -5,7 +5,7 @@
   "description": "FinMatrix — mobile-first double-entry accounting PWA",
   "scripts": {
     "check": "node --check config.js && node --check db.js && node --check utils.js && node --check main.js && node --check sw.js",
-    "test": "npm run check && node --test tests/engine.test.js tests/pwa.test.js tests/ui-sales.test.js tests/ui-validation.test.js tests/ui-xss.test.js"
+    "test": "npm run check && node --test tests/engine.test.js tests/pwa.test.js tests/ui-sales.test.js tests/ui-validation.test.js tests/ui-xss.test.js tests/ui-dates.test.js"
   },
   "devDependencies": {
     "fake-indexeddb": "6.0.0",

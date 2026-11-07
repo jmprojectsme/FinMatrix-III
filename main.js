@@ -198,10 +198,10 @@ window.addEventListener("DOMContentLoaded", function () {
         });
       }
       window.savedSales.filter(x=>x.status==="POSTED").forEach(x=>{
-        const d=x.rows[0]?.date||""; const m=months.find(mo=>d.startsWith(mo.key)); if(m) m.s+=window.calcNet(x.rows);
+        const d=window.docDate(x); const m=months.find(mo=>d.startsWith(mo.key)); if(m) m.s+=window.calcNet(x.rows);
       });
       window.savedPurchases.filter(x=>x.status==="POSTED").forEach(x=>{
-        const d=x.rows[0]?.date||""; const m=months.find(mo=>d.startsWith(mo.key)); if(m) m.p+=window.calcNet(x.rows);
+        const d=window.docDate(x); const m=months.find(mo=>d.startsWith(mo.key)); if(m) m.p+=window.calcNet(x.rows);
       });
 
       if (overviewChart) { try { overviewChart.destroy(); } catch(e){} }
@@ -244,7 +244,7 @@ window.addEventListener("DOMContentLoaded", function () {
             <div class="recent-item" data-type="${type}" data-index="${x._i}">
               <div>
                 <div class="ri-name">${esc(x[nameKey])}</div>
-                <div class="ri-date">${fmtDate(x.rows[0]?.date||"")}</div>
+                <div class="ri-date">${fmtDate(window.docDate(x))}</div>
               </div>
               <div class="ri-amount">${window.calcGross(x.rows).toFixed(2)}</div>
             </div>`).join("") || `<div class="recent-empty">No posted records yet.</div>`;
@@ -338,7 +338,7 @@ window.addEventListener("DOMContentLoaded", function () {
       el.textContent=s; el.className="txn-status "+s.toLowerCase();
     }
     function lockSalesForm(lock) {
-      ["salesCustomer","salesTin","salesReference","salesPaymentMethod"].forEach(id=>{
+      ["salesDate","salesCustomer","salesTin","salesReference","salesPaymentMethod"].forEach(id=>{
         const el=document.getElementById(id); if(el) el.disabled=lock;
       });
       salesBody.querySelectorAll("input,select").forEach(el=>el.disabled=lock);
@@ -358,7 +358,6 @@ window.addEventListener("DOMContentLoaded", function () {
       const tr=document.createElement("tr");
       const acc=window.createAccountDropdown("sales",data.account||"");
       tr.innerHTML=`
-        <td><input type="date" class="s-date" value="${esc(data.date||"")}"></td>
         <td><textarea class="s-desc row-textarea" rows="1" placeholder="Description">${esc(data.desc||"")}</textarea></td>
         <td class="acc-cell"></td>
         <td><input type="number" class="s-net" min="0" step="0.01" value="${esc(data.net||"")}"></td>
@@ -394,7 +393,7 @@ window.addEventListener("DOMContentLoaded", function () {
     }
     function resetSaleForm(withRow) {
       salesBody.innerHTML="";
-      ["salesCustomer","salesTin","salesReference"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+      ["salesDate","salesCustomer","salesTin","salesReference"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
       resetPaymentSection("sale");
       const spm=document.getElementById("salesPaymentMethod"); if(spm) spm.value="Credit";
       ["salesCustomer","salesReference"].forEach(id=>window.clearInlineError(document.getElementById(id)));
@@ -417,7 +416,7 @@ window.addEventListener("DOMContentLoaded", function () {
       const tbody=document.getElementById("salesListTableBody");
       tbody.innerHTML="";
       const list=window.savedSales.filter(s=>{
-        const d=s.rows[0]?.date||"";
+        const d=window.docDate(s);
         if(from&&d<from) return false; if(to&&d>to) return false;
         if(search&&!s.customer.toLowerCase().includes(search)&&!(s.reference||"").toLowerCase().includes(search)&&!(s.tin||"").toLowerCase().includes(search)) return false;
         return true;
@@ -426,7 +425,7 @@ window.addEventListener("DOMContentLoaded", function () {
       [...list].reverse().forEach(s=>{
         const i=window.savedSales.indexOf(s);
         const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${fmtDate(s.rows[0]?.date||"")}</td><td>${esc(s.customer)}</td><td>${esc(s.tin||"—")}</td><td>${esc(s.reference||"—")}</td><td>${paymentBadge(s.paymentMethod||"Credit")}</td><td class="amount-cell">${window.calcGross(s.rows).toFixed(2)}</td><td>${window.statusBadge(s.status)}</td>`;
+        tr.innerHTML=`<td>${fmtDate(window.docDate(s))}</td><td>${esc(s.customer)}</td><td>${esc(s.tin||"—")}</td><td>${esc(s.reference||"—")}</td><td>${paymentBadge(s.paymentMethod||"Credit")}</td><td class="amount-cell">${window.calcGross(s.rows).toFixed(2)}</td><td>${window.statusBadge(s.status)}</td>`;
         tr.onclick=()=>openSale(i);
         tbody.appendChild(tr);
       });
@@ -437,6 +436,7 @@ window.addEventListener("DOMContentLoaded", function () {
       document.getElementById("salesCustomer").value =s.customer;
       document.getElementById("salesTin").value      =s.tin||"";
       document.getElementById("salesReference").value=s.reference||"";
+      document.getElementById("salesDate").value=window.docDate(s);
       // Restore payment method from the saved record (paymentMethod, or older payment.type)
       const spm=document.getElementById("salesPaymentMethod");
       if(spm) spm.value=s.paymentMethod||s.payment?.type||"Credit";
@@ -478,7 +478,9 @@ window.addEventListener("DOMContentLoaded", function () {
       // B1 fix: read the Payment Method dropdown that is actually on the Sales form
       const paymentType=document.getElementById("salesPaymentMethod")?.value||"Credit";
       const payment={type:paymentType};
+      const docDateValue=document.getElementById("salesDate").value;
       const sale={
+        date:docDateValue,
         customer,reference,
         tin:document.getElementById("salesTin").value.trim(),
         payment,
@@ -488,7 +490,7 @@ window.addEventListener("DOMContentLoaded", function () {
         postedAt:existing?.postedAt||null,
         voidedAt:existing?.voidedAt||null,
         rows:[...salesBody.children].map((r,i)=>({
-          date:r.querySelector(".s-date").value,
+          date:docDateValue,
           desc:r.querySelector(".s-desc").value,
           account:r.querySelector(".account-select").value,
           net:amounts.values[i],
@@ -534,7 +536,7 @@ window.addEventListener("DOMContentLoaded", function () {
     function showPurchaseForm(){document.getElementById("purchaseListView").classList.add("hidden");document.getElementById("purchaseFormView").classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"});}
     function setPurchaseStatus(s){const el=document.getElementById("purchaseStatus");el.textContent=s;el.className="txn-status "+s.toLowerCase();}
     function lockPurchaseForm(lock){
-      ["purchaseSupplier","purchaseTin","purchaseReference"].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=lock;});
+      ["purchaseDate","purchaseSupplier","purchaseTin","purchaseReference"].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=lock;});
       purchaseBody.querySelectorAll("input,select,textarea").forEach(el=>el.disabled=lock);
       purchaseBody.querySelectorAll(".btn-del").forEach(b=>b.disabled=lock);
       const addBtn=document.getElementById("addPurchaseRowBtn");
@@ -552,7 +554,6 @@ window.addEventListener("DOMContentLoaded", function () {
       const tr=document.createElement("tr");
       const acc=window.createAccountDropdown("purchases",data.account||"");
       tr.innerHTML=`
-        <td><input type="date" class="p-date" value="${esc(data.date||"")}"></td>
         <td><textarea class="p-desc row-textarea" rows="1" placeholder="Description">${esc(data.desc||"")}</textarea></td>
         <td class="acc-cell"></td>
         <td><input type="number" class="p-net" min="0" step="0.01" value="${esc(data.net||"")}"></td>
@@ -587,7 +588,7 @@ window.addEventListener("DOMContentLoaded", function () {
     }
     function resetPurchaseForm(withRow){
       purchaseBody.innerHTML="";
-      ["purchaseSupplier","purchaseTin","purchaseReference"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+      ["purchaseDate","purchaseSupplier","purchaseTin","purchaseReference"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
       resetPaymentSection("purch");
       ["purchaseSupplier","purchaseReference"].forEach(id=>window.clearInlineError(document.getElementById(id)));
       [["savePurchaseBtn","Save"],["postPurchaseBtn","Post"],["voidPurchaseBtn","Void"]].forEach(([id,lbl])=>{
@@ -609,7 +610,7 @@ window.addEventListener("DOMContentLoaded", function () {
       const tbody=document.getElementById("purchaseListTableBody");
       tbody.innerHTML="";
       const list=window.savedPurchases.filter(p=>{
-        const d=p.rows[0]?.date||"";
+        const d=window.docDate(p);
         if(from&&d<from) return false; if(to&&d>to) return false;
         if(search&&!p.supplier.toLowerCase().includes(search)&&!(p.reference||"").toLowerCase().includes(search)&&!(p.tin||"").toLowerCase().includes(search)) return false;
         return true;
@@ -618,7 +619,7 @@ window.addEventListener("DOMContentLoaded", function () {
       [...list].reverse().forEach(p=>{
         const i=window.savedPurchases.indexOf(p);
         const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${fmtDate(p.rows[0]?.date||"")}</td><td>${esc(p.supplier)}</td><td>${esc(p.tin||"—")}</td><td>${esc(p.reference||"—")}</td><td>${paymentBadge(p.paymentMethod||"Credit")}</td><td class="amount-cell">${window.calcGross(p.rows).toFixed(2)}</td><td>${window.statusBadge(p.status)}</td>`;
+        tr.innerHTML=`<td>${fmtDate(window.docDate(p))}</td><td>${esc(p.supplier)}</td><td>${esc(p.tin||"—")}</td><td>${esc(p.reference||"—")}</td><td>${paymentBadge(p.paymentMethod||"Credit")}</td><td class="amount-cell">${window.calcGross(p.rows).toFixed(2)}</td><td>${window.statusBadge(p.status)}</td>`;
         tr.onclick=()=>openPurchase(i);
         tbody.appendChild(tr);
       });
@@ -629,6 +630,7 @@ window.addEventListener("DOMContentLoaded", function () {
       document.getElementById("purchaseSupplier").value =p.supplier;
       document.getElementById("purchaseTin").value      =p.tin||"";
       document.getElementById("purchaseReference").value=p.reference||"";
+      document.getElementById("purchaseDate").value=window.docDate(p);
       const pm=document.getElementById("purchasePaymentMethod"); if(pm) pm.value=p.paymentMethod||"Credit";
       p.rows.forEach(r=>addPurchaseRow(r));
       setPurchaseStatus(p.status);
@@ -665,7 +667,9 @@ window.addEventListener("DOMContentLoaded", function () {
       if(!this.dataset.confirmed){window.showInlineError(sEl,"Tap Save again to confirm",true);this.dataset.confirmed="true";this.textContent="Confirm Save";return;}
       this.dataset.confirmed="";this.textContent="Save";
       const existing=window.currentPurchaseIndex!==null?window.savedPurchases[window.currentPurchaseIndex]:null;
+      const docDateValue=document.getElementById("purchaseDate").value;
       const purchase={
+        date:docDateValue,
         supplier,reference,
         tin:document.getElementById("purchaseTin").value.trim(),
         paymentMethod:document.getElementById("purchasePaymentMethod").value,
@@ -674,7 +678,7 @@ window.addEventListener("DOMContentLoaded", function () {
         postedAt:existing?.postedAt||null,
         voidedAt:existing?.voidedAt||null,
         rows:[...purchaseBody.children].map((r,i)=>({
-          date:r.querySelector(".p-date").value,
+          date:docDateValue,
           desc:r.querySelector(".p-desc").value,
           account:r.querySelector(".account-select").value,
           net:amounts.values[i],
@@ -721,8 +725,8 @@ window.addEventListener("DOMContentLoaded", function () {
       const all=[
         ...window.savedSales.filter(x=>x.status==="POSTED").map(x=>({...x,_type:"sale",_party:x.customer})),
         ...window.savedPurchases.filter(x=>x.status==="POSTED").map(x=>({...x,_type:"purchase",_party:x.supplier}))
-      ].filter(t=>{const d=t.rows[0]?.date||"";return(!from||d>=from)&&(!to||d<=to);})
-       .sort((a,b)=>(a.rows[0]?.date||"")<(b.rows[0]?.date||"")?-1:1);
+      ].filter(t=>{const d=window.docDate(t);return(!from||d>=from)&&(!to||d<=to);})
+       .sort((a,b)=>window.docDate(a).localeCompare(window.docDate(b)));
       if(!all.length){out.innerHTML=`<div class="report-empty">No posted transactions for this period.</div>`;return;}
       out.innerHTML=`<p class="report-period">Period: ${fmtDate(from)||"All"} → ${fmtDate(to)||"All"}</p>`+
         all.map(t=>{
@@ -731,7 +735,7 @@ window.addEventListener("DOMContentLoaded", function () {
           entries.forEach(e=>{dr+=e.debit;cr+=e.credit;rows+=`<tr><td class="${e.debit>0?"":"cr-indent"}">${esc(e.account)}</td><td class="num">${e.debit>0?e.debit.toFixed(2):""}</td><td class="num">${e.credit>0?e.credit.toFixed(2):""}</td></tr>`;});
           return `<div class="je-block">
             <div class="je-header">
-              <span class="je-date">${fmtDate(t.rows[0]?.date||"")}</span>
+              <span class="je-date">${fmtDate(window.docDate(t))}</span>
               <span class="je-party">${esc(t._party)}</span>
               <span class="je-ref">${esc(t.reference||"—")}</span>
               <span class="je-badge ${t._type}">${t._type==="sale"?"Sale":"Purchase"}</span>
@@ -750,7 +754,7 @@ window.addEventListener("DOMContentLoaded", function () {
       const map={};
       list.filter(x=>x.status==="POSTED").forEach(t=>{
         t.rows.forEach(r=>{
-          const d=r.date||""; if(from&&d<from) return; if(to&&d>to) return;
+          const d=window.docDate(t); if(from&&d<from) return; if(to&&d>to) return;
           const acc=r.account||"(No Account)";
           if(!map[acc]) map[acc]={net:0,vat:0,gross:0};
           const v=r.tax==="VAT"?r.net*0.12:0;
@@ -779,7 +783,7 @@ window.addEventListener("DOMContentLoaded", function () {
       [...window.savedSales.filter(x=>x.status==="POSTED").map(x=>({t:x,type:"sales"})),
        ...window.savedPurchases.filter(x=>x.status==="POSTED").map(x=>({t:x,type:"purchases"}))
       ].forEach(({t,type})=>{
-        const d=t.rows[0]?.date||"";
+        const d=window.docDate(t);
         if(from&&d<from) return; if(to&&d>to) return;
         window.generateJournalEntries(t,type).forEach(e=>add(e.account,e.debit,e.credit));
       });
@@ -1163,13 +1167,13 @@ window.addEventListener("DOMContentLoaded", function () {
         const addDetail=(list,label,nameKey)=>{
           list.filter(x=>x.status==="POSTED").forEach(t=>{
             t.rows.forEach(r=>{
-              const d=r.date||"";
+              const d=window.docDate(t);
               if(from&&d<from) return; if(to&&d>to) return;
               const v=r.tax==="VAT"?+(r.net*0.12).toFixed(2):0;
               const pay=t.payment||{type:t.paymentMethod||"Credit"};
               rows.push([
                 label,
-                r.date||"",
+                d,
                 t[nameKey]||"",
                 t.tin||"",
                 t.reference||"",

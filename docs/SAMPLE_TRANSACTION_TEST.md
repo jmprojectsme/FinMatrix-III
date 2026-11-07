@@ -11,7 +11,7 @@
 2. Company Profile: leave default (VAT registered).
 3. How to enter each document:
    - **Sales** or **Purchases** → **+ Add New**
-   - Fill Name, Payment Method, and the row (Date, Account, Net, Tax)
+   - Fill Date (top of the form), Name, Payment Method, and the row (Account, Net, Tax)
    - Tap **Save** → **Confirm Save**
    - Tap the document in the list → **Post** → **Confirm Post**
 4. The app shows amounts without commas (e.g. `11200.00`).
@@ -226,6 +226,23 @@ Use a fresh, empty copy. Type the text **exactly** as shown, including the `< >`
 
 ---
 
+## Part 6 — One date per document (B14)
+
+From this version, the **Date** is at the top of the Sales and Purchases forms (next to Customer/Supplier), not on each line.
+
+| # | Do this | Expected | Actual | ✓/✗ |
+|---|---|---|---|---|
+| D1 | Sales → + Add New | A **Date** field at the top; the lines have **no** date column | | |
+| D2 | Date **2026-01-31**, Customer "Two Lines", Cash. Line 1: Sales Revenue 10000 VAT. **+ Add Row**. Line 2: Service Revenue 5000 None → Save twice → open → Post twice | Journal: Dr Cash on Hand 16,200 / Cr Sales Revenue 10,000 / Cr Service Revenue 5,000 / Cr Output VAT 1,200 | | |
+| D3 | Reports, From 2026-01-01 To 2026-01-31, **Income Statement** | Total Revenue **15,000.00** | | |
+| D4 | Same period, **Sales Only** | TOTAL Net **15,000.00**, VAT **1,200.00**, Gross **16,200.00** | | |
+| D5 | From 2026-02-01 To 2026-02-28, Income Statement and Sales Only | Revenue **0.00** / "No posted transactions" — the sale is only in January | | |
+| D6 | Open the posted sale | Date shows **Jan 31, 2026** and is greyed out (locked) | | |
+| D7 | New sale with **no date** → Save → open → Post | Saves as Draft; Post shows **"Cannot post: Date is required"** | | |
+| D8 | Purchases → + Add New | Same **Date** field at the top | | |
+
+---
+
 ## Sign-off
 
 | | Result |
@@ -235,6 +252,7 @@ Use a fresh, empty copy. Type the text **exactly** as shown, including the `< >`
 | Part 3 — Known bugs recorded | ☐ Done |
 | Part 4 — Input validation | ☐ All pass ☐ Some fail |
 | Part 5 — Security (text never runs as code) | ☐ All pass ☐ Some fail |
+| Part 6 — One date per document | ☐ All pass ☐ Some fail |
 
 **Comments:** _______________________________________________________________
 

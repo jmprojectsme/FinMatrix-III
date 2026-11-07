@@ -97,6 +97,13 @@ window.isDuplicateRef = function (list, ref, currentIndex) {
   return list.some((x,i) => i !== currentIndex && x.reference?.toLowerCase() === lo);
 };
 
+// ── Document date (audit B14) ─────────────────────
+// Each sale/purchase has ONE date that decides its period in every report.
+// Documents saved before this change have no "date" field: their first line's date is used.
+window.docDate = function (doc) {
+  return doc?.date || doc?.rows?.[0]?.date || "";
+};
+
 // ── Validation (audit B2, B3, B4) ─────────────────
 window.MAX_AMOUNT = 999999999.99;
 
@@ -120,9 +127,9 @@ window.validateDocumentForPost = function (doc, type) {
   const errors = [];
   const rows = doc?.rows || [];
   if (!rows.length) return ["Add at least one line before posting"];
+  if (!window.docDate(doc)) errors.push("Date is required");
   rows.forEach((r, i) => {
     const n = `Line ${i+1}`;
-    if (!r.date)    errors.push(`${n}: date is required`);
     if (!r.account) errors.push(`${n}: account is required`);
     const net = r.net;
     if (typeof net !== "number" || !isFinite(net))      errors.push(`${n}: enter a valid amount`);

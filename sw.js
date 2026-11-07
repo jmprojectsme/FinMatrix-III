@@ -3,7 +3,7 @@
 // Version: 2.0.0
 // =====================================================
 
-const CACHE_NAME    = "finmatrix-v2.0.3";
+const CACHE_NAME    = "finmatrix-v2.0.4";
 const STATIC_ASSETS = [
   "./index.html",
   "./style.css",

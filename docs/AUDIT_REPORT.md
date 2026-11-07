@@ -158,7 +158,7 @@ FinMatrix is a functional single-page recorder of sales and purchases that deriv
 | B24 | `sw.js:6, 447-451` | Cache-first + fixed cache name → updates never reach users; error responses cached | Derive `CACHE_NAME` from app version; use stale-while-revalidate for app files; cache only `res.ok`; show "Update available — reload" prompt instead of silent `skipWaiting()` |
 | B25 | `main.js:1217`, `1233` | Backup blocked offline though it's a local download; no restore feature; misleading "Settings" message | Remove `onLine` check for file download; add **Restore from backup** with schema validation; delay `revokeObjectURL` (e.g. `setTimeout` 1s) |
 | B26 | `main.js:342`, `config.js:22` | `companyProfile.nature` (Non-VAT) unused; VAT always defaults on; EWT accounts have no logic | Default tax to "None" for Non-VAT companies and hide Output VAT; add Exempt/Zero-rated codes; add EWT computation if needed |
-| B27 | `manifest.json:6` | Orientation forced to landscape on a mobile-first app | Use `"any"` or `"portrait"`; add real screenshots; split `"maskable"` and `"any"` icons |
+| B27 | `manifest.json:6` | Orientation forced to landscape on a mobile-first app — **update: landscape is the owner's intentional design choice; not a bug** | Keep landscape; still add real screenshots and split `"maskable"` and `"any"` icons |
 
 ---
 

@@ -121,6 +121,7 @@
         <div class="total-box"><span>Grand Total</span><strong id="salesTotal">0.00</strong></div>
       </div>
       <div class="form-header">
+        <div><label>Date</label><input type="date" id="salesDate"></div>
         <div><label>Customer Name</label><input type="text" id="salesCustomer" autocomplete="off"></div>
         <div><label>TIN Number</label><input type="text" id="salesTin" autocomplete="off" placeholder="000-000-000"></div>
         <div><label>Reference No.</label><input type="text" id="salesReference" autocomplete="off"></div>
@@ -135,7 +136,7 @@
       </div>
       <div class="table-wrapper">
         <table class="txn-table">
-          <thead><tr><th>Date</th><th>Description</th><th>Account</th><th class="num">Net</th><th class="num">Output VAT</th><th>Tax</th><th></th></tr></thead>
+          <thead><tr><th>Description</th><th>Account</th><th class="num">Net</th><th class="num">Output VAT</th><th>Tax</th><th></th></tr></thead>
           <tbody id="salesTableBody"></tbody>
         </table>
       </div>
@@ -201,6 +202,7 @@
         <div class="total-box"><span>Grand Total</span><strong id="purchaseTotal">0.00</strong></div>
       </div>
       <div class="form-header">
+        <div><label>Date</label><input type="date" id="purchaseDate"></div>
         <div><label>Supplier Name</label><input type="text" id="purchaseSupplier" autocomplete="off"></div>
         <div><label>TIN Number</label><input type="text" id="purchaseTin" autocomplete="off" placeholder="000-000-000"></div>
         <div><label>Reference No.</label><input type="text" id="purchaseReference" autocomplete="off"></div>
@@ -215,7 +217,7 @@
       </div>
       <div class="table-wrapper">
         <table class="txn-table">
-          <thead><tr><th>Date</th><th>Description</th><th>Account</th><th class="num">Net</th><th class="num">Input VAT</th><th>Tax</th><th></th></tr></thead>
+          <thead><tr><th>Description</th><th>Account</th><th class="num">Net</th><th class="num">Input VAT</th><th>Tax</th><th></th></tr></thead>
           <tbody id="purchaseTableBody"></tbody>
         </table>
       </div>
