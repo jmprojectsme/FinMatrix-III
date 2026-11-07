@@ -39,7 +39,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
   - **Tested by the owner in Spck preview: all results correct** (Cash 11,200; Bank 56,000; AR 5,000; BS 72,200 balanced; IS 65,000)
 - [x] **Input validation (B2, B3, B4)** — **tested by the owner on the phone (Part 4, V1–V10: all pass)**, merged into `main` via PR #2
 - [x] **XSS escaping (B28) + group names with quotes (B12)** — **tested by the owner on the phone (Part 5, X1–X8: all pass)**, merged into `main` via PR #3
-- [ ] **One date per document (B14)** — on the working branch, waiting for owner testing (`docs/SAMPLE_TRANSACTION_TEST.md`, Part 6), then merge
+- [x] **One date per document (B14)** — **tested by the owner on the phone (Part 6: all pass)**, merged into `main` via PR #4
   - Date field at the top of Sales and Purchases; no date on each line
   - Every report uses the document date, so a document is always in one period
   - Older documents use their first line's date; stored data unchanged. For an older document whose lines had different dates, Sales/Purchases by Account now agrees with the Income Statement (whole document in the first line's period)
@@ -62,7 +62,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 1. [x] B1 — Sales payment method *(merged, PR #1)*
 2. [x] Input validation — reject negative amounts, more than 2 decimals, empty documents, lines without account/date (B2, B3, B4) *(merged, PR #2)*
 3. [x] XSS escaping of user text (B28), plus Chart of Accounts group names with quotes (B12) *(merged, PR #3)*
-4. [x] One date per document (B14) — Option A: one Date at the top of the form, like Xero *(built and tested on branch; awaiting owner test + merge)*
+4. [x] One date per document (B14) — Option A: one Date at the top of the form, like Xero *(merged, PR #4)*
 5. [ ] Balance Sheet cumulative "as of"; "Period: All" labels (B18, B22)
 6. [ ] Chart of Accounts safety — account IDs & types, protected system accounts, no duplicates/lost accounts (B7–B11)
 7. [ ] Report accuracy — TB net balances & ordering, IS sections (Gross Profit etc.), Home Net Income = IS (B13, B16, B17)
