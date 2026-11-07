@@ -2,6 +2,13 @@
 // utils.js — Shared Helpers
 // =====================================================
 
+// B28: makes text safe to put inside HTML (customer names, accounts, references, etc.)
+// so that something like "<img onerror=...>" is shown as text instead of running.
+window.escapeHtml = function (value) {
+  return String(value ?? "").replace(/[&<>"']/g, c =>
+    ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[c]);
+};
+
 window.nowTimestamp = function () {
   const n = new Date();
   return n.toLocaleDateString() + " " + n.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
@@ -227,7 +234,7 @@ window.renderJournalEntries = function (entries, tbody) {
     totDr += e.debit; totCr += e.credit;
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="${e.debit>0?"":"cr-indent"}">${e.account}</td>
+      <td class="${e.debit>0?"":"cr-indent"}">${window.escapeHtml(e.account)}</td>
       <td class="num">${e.debit>0?e.debit.toFixed(2):""}</td>
       <td class="num">${e.credit>0?e.credit.toFixed(2):""}</td>`;
     tbody.appendChild(tr);

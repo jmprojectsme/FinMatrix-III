@@ -187,7 +187,6 @@ These are already in the audit and will be fixed one by one. Record what you see
 | Home page → Net Income (after Part 2) | 54,000.00 | 24,000.00 (counts PPE as expense) | B17 | |
 | Balance Sheet with From **2026-02-01**, To 2026-03-31 | Total Assets 67,920.00 (BS is cumulative) | Total Assets 1,000.00 | B18 | |
 | Report header with no dates | "Period: All → All" | "Period: — → —" | B22 | |
-| Customer name `<b>Test</b>` | Shows the text `<b>Test</b>` literally | Shows **Test** in bold (HTML runs) | B28 | |
 
 ---
 
@@ -210,6 +209,23 @@ Use a fresh, empty copy. For each check, start with **+ Add New**.
 
 ---
 
+## Part 5 — Security: text is never treated as code (B28, B12)
+
+Use a fresh, empty copy. Type the text **exactly** as shown, including the `< >` and quotes.
+
+| # | Do this | Expected | Actual | ✓/✗ |
+|---|---|---|---|---|
+| X1 | New sale, Customer **`<b>Test</b>`**, date, Sales Revenue, 100, VAT → Save twice | The Sales list shows **`<b>Test</b>`** exactly as typed — **not** the word "Test" in bold | | |
+| X2 | Open it → Post twice | Journal preview shows normally; the customer name above still shows `<b>Test</b>` | | |
+| X3 | Home page | Recent Sales shows `<b>Test</b>` as text | | |
+| X4 | Journal → Run | The entry shows `<b>Test</b>` as text | | |
+| X5 | Settings → Company Profile → Name **`<i>My Co</i>`** → Save; Reports → Income Statement → Run | Header shows `<i>My Co</i>` as text, not in italics | | |
+| X6 | Settings → Chart of Accounts → Revenue → new group **`Owner's "Special" Fees`** → + Group | Group appears with the quotes shown correctly | | |
+| X7 | In that group, type account **`Tip Income`** → Add | Account is added to that group (before the fix, Add did nothing for names with quotes) | | |
+| X8 | New sale using account **Tip Income**, 100, None → Save → Post; run Trial Balance | Shows Tip Income 100.00 normally | | |
+
+---
+
 ## Sign-off
 
 | | Result |
@@ -218,6 +234,7 @@ Use a fresh, empty copy. For each check, start with **+ Add New**.
 | Part 2 — Month-end figures | ☐ All pass ☐ Some fail |
 | Part 3 — Known bugs recorded | ☐ Done |
 | Part 4 — Input validation | ☐ All pass ☐ Some fail |
+| Part 5 — Security (text never runs as code) | ☐ All pass ☐ Some fail |
 
 **Comments:** _______________________________________________________________
 

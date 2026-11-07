@@ -38,6 +38,9 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
   - Existing records unchanged
   - **Tested by the owner in Spck preview: all results correct** (Cash 11,200; Bank 56,000; AR 5,000; BS 72,200 balanced; IS 65,000)
 - [x] **Input validation (B2, B3, B4)** — **tested by the owner on the phone (Part 4, V1–V10: all pass)**, merged into `main` via PR #2
+- [ ] **XSS escaping (B28) + group names with quotes (B12)** — on the working branch, waiting for owner testing (`docs/SAMPLE_TRANSACTION_TEST.md`, Part 5), then merge
+  - Everything users type is shown as plain text on every screen; nothing can run as code
+  - Stored data is unchanged; only the display is made safe
   - Save: amounts must be valid, not negative, max 2 decimals (drafts may be incomplete)
   - Post: at least one line; each line needs date, account, amount > 0; entry must balance
   - Old records are not changed; invalid old drafts simply cannot be posted until corrected
@@ -54,7 +57,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 ### Phase A — Accounting logic (make it robust)
 1. [x] B1 — Sales payment method *(merged, PR #1)*
 2. [x] Input validation — reject negative amounts, more than 2 decimals, empty documents, lines without account/date (B2, B3, B4) *(merged, PR #2)*
-3. [ ] XSS escaping of user text (B28) — small, protects client data; do early
+3. [x] XSS escaping of user text (B28), plus Chart of Accounts group names with quotes (B12) *(built and tested on branch; awaiting owner test + merge)*
 4. [ ] One date per document (B14)
 5. [ ] Balance Sheet cumulative "as of"; "Period: All" labels (B18, B22)
 6. [ ] Chart of Accounts safety — account IDs & types, protected system accounts, no duplicates/lost accounts (B7–B11)
@@ -86,6 +89,11 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 ### Pilot & release
 - [ ] Pilot: run in parallel with real books for 2–3 months (owner's brother's photography business; CPA friends review)
 - [ ] Release 1.0
+
+### Found during development (to schedule)
+- B4 part 2: Post does not wait for the storage write / handle a write failure (UI could show POSTED while storage says Draft)
+- Edit → Post without Save posts the previously saved version; fix: hide Post while editing (must Save first)
+- CSV export: neutralise cells starting with = + - @ (formula injection in Excel)
 
 ### Feature requests to schedule
 - Down payments / deposits → **Unearned Revenue** (needed by the photography pilot)
