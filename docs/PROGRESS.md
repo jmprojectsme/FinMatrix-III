@@ -41,7 +41,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 - [x] **XSS escaping (B28) + group names with quotes (B12)** — **tested by the owner on the phone (Part 5, X1–X8: all pass)**, merged into `main` via PR #3
 - [x] **One date per document (B14)** — **tested by the owner on the phone (Part 6: all pass)**, merged into `main` via PR #4
 - [x] Owner used version 2.0.4 for ~10 days before step 5 (no issues reported)
-- [ ] **Step 5: Balance Sheet "as of" (B18), labels (B22), Purchases dropdown** — on the working branch, waiting for owner testing (`docs/SAMPLE_TRANSACTION_TEST.md`, Part 7), then merge
+- [x] **Step 5: Balance Sheet "as of" (B18), labels (B22), Purchases dropdown, About shows real version** — **tested by the owner on the phone** ("Lumen Studio" sample set: BS 56,340.00 with and without From; IS 37,500.00; TB 92,380.00; About 2.0.5), merged into `main` via PR #5
   - Date field at the top of Sales and Purchases; no date on each line
   - Every report uses the document date, so a document is always in one period
   - Older documents use their first line's date; stored data unchanged. For an older document whose lines had different dates, Sales/Purchases by Account now agrees with the Income Statement (whole document in the first line's period)
@@ -65,7 +65,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 2. [x] Input validation — reject negative amounts, more than 2 decimals, empty documents, lines without account/date (B2, B3, B4) *(merged, PR #2)*
 3. [x] XSS escaping of user text (B28), plus Chart of Accounts group names with quotes (B12) *(merged, PR #3)*
 4. [x] One date per document (B14) — Option A: one Date at the top of the form, like Xero *(merged, PR #4)*
-5. [x] Balance Sheet cumulative "as of"; "Period: All" labels (B18, B22); Purchases payment dropdown reset + lock *(built and tested on branch; awaiting owner test + merge)*
+5. [x] Balance Sheet cumulative "as of"; "Period: All" labels (B18, B22); Purchases payment dropdown reset + lock; About shows real version *(merged, PR #5)*
 6. [ ] Chart of Accounts safety — account IDs & types, protected system accounts, no duplicates/lost accounts (B7–B11)
 7. [ ] Report accuracy — TB net balances & ordering, IS sections (Gross Profit etc.), Home Net Income = IS (B13, B16, B17)
 8. [ ] Voids as reversing entries (B5)
