@@ -40,6 +40,8 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 - [x] **Input validation (B2, B3, B4)** — **tested by the owner on the phone (Part 4, V1–V10: all pass)**, merged into `main` via PR #2
 - [x] **XSS escaping (B28) + group names with quotes (B12)** — **tested by the owner on the phone (Part 5, X1–X8: all pass)**, merged into `main` via PR #3
 - [x] **One date per document (B14)** — **tested by the owner on the phone (Part 6: all pass)**, merged into `main` via PR #4
+- [x] Owner used version 2.0.4 for ~10 days before step 5 (no issues reported)
+- [ ] **Step 5: Balance Sheet "as of" (B18), labels (B22), Purchases dropdown** — on the working branch, waiting for owner testing (`docs/SAMPLE_TRANSACTION_TEST.md`, Part 7), then merge
   - Date field at the top of Sales and Purchases; no date on each line
   - Every report uses the document date, so a document is always in one period
   - Older documents use their first line's date; stored data unchanged. For an older document whose lines had different dates, Sales/Purchases by Account now agrees with the Income Statement (whole document in the first line's period)
@@ -63,7 +65,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 2. [x] Input validation — reject negative amounts, more than 2 decimals, empty documents, lines without account/date (B2, B3, B4) *(merged, PR #2)*
 3. [x] XSS escaping of user text (B28), plus Chart of Accounts group names with quotes (B12) *(merged, PR #3)*
 4. [x] One date per document (B14) — Option A: one Date at the top of the form, like Xero *(merged, PR #4)*
-5. [ ] Balance Sheet cumulative "as of"; "Period: All" labels (B18, B22)
+5. [x] Balance Sheet cumulative "as of"; "Period: All" labels (B18, B22); Purchases payment dropdown reset + lock *(built and tested on branch; awaiting owner test + merge)*
 6. [ ] Chart of Accounts safety — account IDs & types, protected system accounts, no duplicates/lost accounts (B7–B11)
 7. [ ] Report accuracy — TB net balances & ordering, IS sections (Gross Profit etc.), Home Net Income = IS (B13, B16, B17)
 8. [ ] Voids as reversing entries (B5)
@@ -86,7 +88,6 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 - [ ] ₱ and thousands separators
 - [ ] Default row date = today
 - [ ] Clear "Tap Post/Save again" hint after the action completes *(noticed during B1 testing)*
-- [ ] Purchases payment dropdown: reset to Credit on new purchase; lock when posted *(noticed during B1)*
 - [ ] Customer/supplier list with TIN autofill; duplicate document
 - [ ] Split `main.js` into smaller files (easier to edit on a phone)
 
