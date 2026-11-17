@@ -38,3 +38,16 @@ test("every local script referenced by index.html exists", () => {
   assert.ok(refs.length > 0, "no local scripts found in index.html");
   for (const src of refs) assert.ok(exists(src), `index.html loads a missing script: ${src}`);
 });
+
+test("app version is the same everywhere (About page, service worker, package.json)", () => {
+  // The About page (Settings → About) shows APP_INFO.version from config.js.
+  // The service worker's CACHE_NAME decides when installed phones update.
+  // They must always match, so users see the version they actually run.
+  const config = fs.readFileSync(path.join(ROOT, "config.js"), "utf8");
+  const shown = config.match(/version:\s*"([\d.]+)"/)?.[1];
+  const cache = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8").match(/CACHE_NAME\s*=\s*"finmatrix-v([\d.]+)"/)?.[1];
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8")).version;
+  assert.ok(shown && cache, "version found in config.js and sw.js");
+  assert.equal(shown, cache, `About page shows ${shown} but the service worker is ${cache}`);
+  assert.equal(pkg, cache, `package.json is ${pkg} but the service worker is ${cache}`);
+});

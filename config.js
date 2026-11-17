@@ -9,9 +9,9 @@ window.currentPurchaseIndex = null;
 // App info
 window.APP_INFO = {
   name:      "FinMatrix",
-  version:   "2.0.0",
+  version:   "2.0.5",   // keep in sync with CACHE_NAME in sw.js and package.json (checked by tests/pwa.test.js)
   developer: "Jaymar Reperuga",
-  updated:   "April 2026",
+  updated:   "November 2026",
   description: "A free mobile-first accounting tool built for Philippine small businesses and freelancers."
 };
 

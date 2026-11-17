@@ -1,6 +1,6 @@
 {
   "name": "finmatrix",
-  "version": "2.0.0",
+  "version": "2.0.5",
   "private": true,
   "description": "FinMatrix — mobile-first double-entry accounting PWA",
   "scripts": {

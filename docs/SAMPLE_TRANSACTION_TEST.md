@@ -253,6 +253,7 @@ From this version, the **Date** is at the top of the Sales and Purchases forms (
 | R6 | Any report with **both dates blank** | Header says **Period: All → All** (Balance Sheet: **As of: Today**), not "— → —" | | |
 | R7 | Open the Feb 20 Bank purchase, then tap **+ Add New** | Payment Method starts at **Credit (AP)** | | |
 | R8 | Open the posted Feb 20 purchase | Payment Method shows **Bank Transfer**, greyed out (locked) | | |
+| R9 | Settings → **About** | Version **2.0.5**, Last Updated **November 2026** | | |
 
 ---
 
