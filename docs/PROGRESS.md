@@ -40,6 +40,8 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 - [x] **Input validation (B2, B3, B4)** — **tested by the owner on the phone (Part 4, V1–V10: all pass)**, merged into `main` via PR #2
 - [x] **XSS escaping (B28) + group names with quotes (B12)** — **tested by the owner on the phone (Part 5, X1–X8: all pass)**, merged into `main` via PR #3
 - [x] **One date per document (B14)** — **tested by the owner on the phone (Part 6: all pass)**, merged into `main` via PR #4
+- [x] Owner used version 2.0.4 for ~10 days before step 5 (no issues reported)
+- [x] **Step 5: Balance Sheet "as of" (B18), labels (B22), Purchases dropdown, About shows real version** — **tested by the owner on the phone** ("Lumen Studio" sample set: BS 56,340.00 with and without From; IS 37,500.00; TB 92,380.00; About 2.0.5), merged into `main` via PR #5
   - Date field at the top of Sales and Purchases; no date on each line
   - Every report uses the document date, so a document is always in one period
   - Older documents use their first line's date; stored data unchanged. For an older document whose lines had different dates, Sales/Purchases by Account now agrees with the Income Statement (whole document in the first line's period)
@@ -63,7 +65,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 2. [x] Input validation — reject negative amounts, more than 2 decimals, empty documents, lines without account/date (B2, B3, B4) *(merged, PR #2)*
 3. [x] XSS escaping of user text (B28), plus Chart of Accounts group names with quotes (B12) *(merged, PR #3)*
 4. [x] One date per document (B14) — Option A: one Date at the top of the form, like Xero *(merged, PR #4)*
-5. [ ] Balance Sheet cumulative "as of"; "Period: All" labels (B18, B22)
+5. [x] Balance Sheet cumulative "as of"; "Period: All" labels (B18, B22); Purchases payment dropdown reset + lock; About shows real version *(merged, PR #5)*
 6. [ ] Chart of Accounts safety — account IDs & types, protected system accounts, no duplicates/lost accounts (B7–B11)
 7. [ ] Report accuracy — TB net balances & ordering, IS sections (Gross Profit etc.), Home Net Income = IS (B13, B16, B17)
 8. [ ] Voids as reversing entries (B5)
@@ -86,7 +88,6 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 - [ ] ₱ and thousands separators
 - [ ] Default row date = today
 - [ ] Clear "Tap Post/Save again" hint after the action completes *(noticed during B1 testing)*
-- [ ] Purchases payment dropdown: reset to Credit on new purchase; lock when posted *(noticed during B1)*
 - [ ] Customer/supplier list with TIN autofill; duplicate document
 - [ ] Split `main.js` into smaller files (easier to edit on a phone)
 
@@ -113,7 +114,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 |---|---|
 | Existing sales saved as "Credit" before B1 | Left unchanged; owner may void and re-enter if some were really cash/bank |
 | Testing new versions on the phone | Spck Pull is a paid feature. Use a raw.githack link to the exact commit (separate storage; do not install it), or re-clone / ZIP |
-| App updates reaching installed phones | Bump `CACHE_NAME` in `sw.js` in every release that changes app files (2.0.1 = B1 fix). Proper fix for updates is in Phase B |
+| App updates reaching installed phones | Every release that changes app files bumps the version in **three places that must match**: `sw.js` CACHE_NAME, `config.js` APP_INFO.version + updated (shown in Settings → About), `package.json` — enforced by `tests/pwa.test.js`. Record each release in `docs/CHANGELOG.md`. Proper update prompt is in Phase B |
 | Screen orientation (owner decision) | **Landscape is intentional** — wide tables (lines, reports) fit better on a phone. Keep `"orientation": "landscape"` in `manifest.json`; B27's orientation point is closed as *won't change*. Check layouts in landscape |
 | Document date (agreed, Option A) | One date per sale/purchase at the top of the form (like Xero invoice date / BIR invoice). It decides the period and VAT quarter in every report. Older documents: first line's date |
 | Validation policy (agreed) | More than 2 decimals → **reject** (no auto-round). Zero-amount lines → **block posting**. Basic checks on Save, full checks on Post (drafts may be incomplete, like Xero) |

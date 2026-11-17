@@ -16,6 +16,8 @@ window.addEventListener("DOMContentLoaded", function () {
     // B28: everything typed by users is escaped before it is put on the page as HTML
     const esc = window.escapeHtml;
     function fmtDate(s) { return esc(window.formatDate(s)); }
+    // B22: report labels show "All"/"Today" when no date is chosen (formatDate("") returns "—")
+    function dateLabel(d, fallback) { return d ? fmtDate(d) : fallback; }
 
     function paymentBadge(pm) {
       const map = {
@@ -536,7 +538,7 @@ window.addEventListener("DOMContentLoaded", function () {
     function showPurchaseForm(){document.getElementById("purchaseListView").classList.add("hidden");document.getElementById("purchaseFormView").classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"});}
     function setPurchaseStatus(s){const el=document.getElementById("purchaseStatus");el.textContent=s;el.className="txn-status "+s.toLowerCase();}
     function lockPurchaseForm(lock){
-      ["purchaseDate","purchaseSupplier","purchaseTin","purchaseReference"].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=lock;});
+      ["purchaseDate","purchaseSupplier","purchaseTin","purchaseReference","purchasePaymentMethod"].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=lock;});
       purchaseBody.querySelectorAll("input,select,textarea").forEach(el=>el.disabled=lock);
       purchaseBody.querySelectorAll(".btn-del").forEach(b=>b.disabled=lock);
       const addBtn=document.getElementById("addPurchaseRowBtn");
@@ -590,6 +592,7 @@ window.addEventListener("DOMContentLoaded", function () {
       purchaseBody.innerHTML="";
       ["purchaseDate","purchaseSupplier","purchaseTin","purchaseReference"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
       resetPaymentSection("purch");
+      const ppm=document.getElementById("purchasePaymentMethod"); if(ppm) ppm.value="Credit";
       ["purchaseSupplier","purchaseReference"].forEach(id=>window.clearInlineError(document.getElementById(id)));
       [["savePurchaseBtn","Save"],["postPurchaseBtn","Post"],["voidPurchaseBtn","Void"]].forEach(([id,lbl])=>{
         const b=document.getElementById(id); if(b){b.dataset.confirmed="";b.textContent=lbl;}
@@ -728,7 +731,7 @@ window.addEventListener("DOMContentLoaded", function () {
       ].filter(t=>{const d=window.docDate(t);return(!from||d>=from)&&(!to||d<=to);})
        .sort((a,b)=>window.docDate(a).localeCompare(window.docDate(b)));
       if(!all.length){out.innerHTML=`<div class="report-empty">No posted transactions for this period.</div>`;return;}
-      out.innerHTML=`<p class="report-period">Period: ${fmtDate(from)||"All"} → ${fmtDate(to)||"All"}</p>`+
+      out.innerHTML=`<p class="report-period">Period: ${dateLabel(from,"All")} → ${dateLabel(to,"All")}</p>`+
         all.map(t=>{
           const entries=window.generateJournalEntries(t,t._type==="sale"?"sales":"purchases");
           let rows="";let dr=0,cr=0;
@@ -832,7 +835,7 @@ window.addEventListener("DOMContentLoaded", function () {
       return `<div class="report-section">
         <h3>Income Statement (Statement of Financial Performance)</h3>
         ${header}
-        <p class="report-period">Period: ${fmtDate(from)||"All"} → ${fmtDate(to)||"All"}</p>
+        <p class="report-period">Period: ${dateLabel(from,"All")} → ${dateLabel(to,"All")}</p>
         <table class="report-table">
           <thead><tr><th>Account</th><th class="num">Amount</th></tr></thead>
           <tbody>
@@ -854,7 +857,9 @@ window.addEventListener("DOMContentLoaded", function () {
     }
 
     function balanceSheet(from,to){
-      const ledger      = buildLedger(from,to);
+      // B18: a Balance Sheet shows ALL balances up to the "To" date ("as of"),
+      // so the "From" date is not used here.
+      const ledger      = buildLedger("",to);
       const assetAccts  = Object.values(window.COA.assets||{}).flat();
       const liabAccts   = Object.values(window.COA.liabilities||{}).flat();
       const equityAccts = Object.values(window.COA.equity||{}).flat();
@@ -908,7 +913,8 @@ window.addEventListener("DOMContentLoaded", function () {
       return `<div class="report-section">
         <h3>Balance Sheet (Statement of Financial Position)</h3>
         ${header}
-        <p class="report-period">As of: ${fmtDate(to)||"Today"}</p>
+        <p class="report-period">As of: ${dateLabel(to,"Today")}</p>
+        ${from ? `<p class="report-period">Includes all posted transactions up to this date (the From date is not used for the Balance Sheet).</p>` : ""}
         ${!balanced ? `<div class="tb-err">⚠ Balance Sheet does not balance — you may have unrecorded equity or opening balances</div>` : ""}
         <table class="report-table">
           <thead><tr><th>Account</th><th class="num">Amount</th></tr></thead>
@@ -945,7 +951,9 @@ window.addEventListener("DOMContentLoaded", function () {
       const type=document.getElementById("reportType").value;
       const out=document.getElementById("reportOutput");
       _lastReport={from,to,type};
-      let html=`<p class="report-period">Period: ${fmtDate(from)||"All"} → ${fmtDate(to)||"All"} | Posted only</p>`;
+      let html=type==="bs"
+        ? `<p class="report-period">As of: ${dateLabel(to,"Today")} | Posted only</p>`
+        : `<p class="report-period">Period: ${dateLabel(from,"All")} → ${dateLabel(to,"All")} | Posted only</p>`;
       if(type==="trial")   html+=trialBalance(from,to);
       else if(type==="is") html+=incomeStatement(from,to);
       else if(type==="bs") html+=balanceSheet(from,to);
@@ -1056,7 +1064,7 @@ window.addEventListener("DOMContentLoaded", function () {
         rows.push(["(Statement of Financial Position)"]);
         rows.push([]);
 
-        const ledger=buildLedger(from,to);
+        const ledger=buildLedger("",to);   // B18: cumulative "as of" the To date
         const assetAccts  = Object.values(window.COA.assets||{}).flat();
         const liabAccts   = Object.values(window.COA.liabilities||{}).flat();
         const equityAccts = Object.values(window.COA.equity||{}).flat();

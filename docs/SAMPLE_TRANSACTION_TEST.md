@@ -185,8 +185,6 @@ These are already in the audit and will be fixed one by one. Record what you see
 | Check | Correct result | What the app shows today | Bug | Actual |
 |---|---|---|---|---|
 | Home page → Net Income (after Part 2) | 54,000.00 | 24,000.00 (counts PPE as expense) | B17 | |
-| Balance Sheet with From **2026-02-01**, To 2026-03-31 | Total Assets 67,920.00 (BS is cumulative) | Total Assets 1,000.00 | B18 | |
-| Report header with no dates | "Period: All → All" | "Period: — → —" | B22 | |
 
 ---
 
@@ -243,6 +241,22 @@ From this version, the **Date** is at the top of the Sales and Purchases forms (
 
 ---
 
+## Part 7 — Balance Sheet "as of", labels, Purchases dropdown (B18, B22)
+
+| # | Do this | Expected | Actual | ✓/✗ |
+|---|---|---|---|---|
+| R1 | Post: **Jan 5** Cash sale, Sales Revenue **10000 VAT**; **Feb 20** Bank purchase, Property, Plant & Equipment **30000 VAT**; **Feb 10** Credit sale, Professional Fees **5000 None** | All three posted | | |
+| R2 | Reports → **Balance Sheet**, From blank, To **2026-02-28** | Total Assets **16,200.00** = Total L+E **16,200.00** | | |
+| R3 | Same, but From **2026-02-01** | **Still 16,200.00** (Cash on Hand 11,200 still shown) and a note: "the From date is not used for the Balance Sheet". Header says **As of: Feb 28, 2026** | | |
+| R4 | Export CSV of R3 | TOTAL ASSETS **16200.00**, BALANCED | | |
+| R5 | Income Statement From **2026-02-01** To **2026-02-28** | Total Revenue **5,000.00** (the Income Statement still uses the period) | | |
+| R6 | Any report with **both dates blank** | Header says **Period: All → All** (Balance Sheet: **As of: Today**), not "— → —" | | |
+| R7 | Open the Feb 20 Bank purchase, then tap **+ Add New** | Payment Method starts at **Credit (AP)** | | |
+| R8 | Open the posted Feb 20 purchase | Payment Method shows **Bank Transfer**, greyed out (locked) | | |
+| R9 | Settings → **About** | Version **2.0.5**, Last Updated **November 2026** | | |
+
+---
+
 ## Sign-off
 
 | | Result |
@@ -253,6 +267,7 @@ From this version, the **Date** is at the top of the Sales and Purchases forms (
 | Part 4 — Input validation | ☐ All pass ☐ Some fail |
 | Part 5 — Security (text never runs as code) | ☐ All pass ☐ Some fail |
 | Part 6 — One date per document | ☐ All pass ☐ Some fail |
+| Part 7 — Balance Sheet "as of", labels, Purchases dropdown | ☐ All pass ☐ Some fail |
 
 **Comments:** _______________________________________________________________
 

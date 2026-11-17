@@ -12,6 +12,7 @@ These tests run automatically on GitHub every time you push, so you don't need a
 | `ui-validation.test.js` | Input validation on the real Sales and Purchases forms: negative amounts and more than 2 decimals rejected on Save; Post blocked for missing date/account, zero amounts, or no lines; old records untouched |
 | `ui-xss.test.js` | Security: text typed by users (names, references, accounts, company name) is shown as plain text on every screen and can never run as code; Chart of Accounts group names with quotes work |
 | `ui-dates.test.js` | One date per document: the Date field at the top is saved and locked when posted, and every report (Journal, Trial Balance, Income Statement, Balance Sheet, Sales/Purchases by Account, lists) puts a document in the same period; older documents use their first line's date and are not changed |
+| `ui-reports.test.js` | Balance Sheet is cumulative "as of" the To date (screen and CSV), Income Statement still uses the period, report labels show All/Today, Purchases payment dropdown resets and locks like Sales |
 | `pwa.test.js` | App packaging: manifest is valid, icons exist, every file the service worker caches exists, every script in `index.html` exists |
 
 Before the tests, GitHub also checks that every `.js` file has valid syntax.
