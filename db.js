@@ -53,6 +53,8 @@ window.DB = {
     purchases.sort((a,b) => a.id - b.id);
     window.savedPurchases = purchases;
     const coa = await getSetting("coa");
+    const coaMeta = await getSetting("coaMeta");
+    if (coaMeta) window.COA_META = { archived: [], ...coaMeta };
     if (coa) window.COA = coa;
     const profile = await getSetting("companyProfile");
     if (profile) window.companyProfile = profile;
@@ -86,6 +88,7 @@ window.DB = {
 
   saveCOA: async function () {
     await putRecord("settings", { key:"coa", value:window.COA });
+    await putRecord("settings", { key:"coaMeta", value:window.COA_META });
   },
   saveCompanyProfile: async function () {
     await putRecord("settings", { key:"companyProfile", value:window.companyProfile });

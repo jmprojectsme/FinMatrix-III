@@ -270,3 +270,8 @@ main{padding:14px;max-width:1200px;margin:0 auto}
   .coa-tabs{display:grid;grid-template-columns:repeat(2,1fr)}
   .tut-step{flex-direction:column}
 }
+
+/* Chart of Accounts: archived accounts and text buttons (step 6a) */
+.coa-acc-archived span{color:#94a3b8}
+.coa-archived-tag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:#f1f5f9;color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.btn-coa-text{font-size:11px;color:#1e40af}

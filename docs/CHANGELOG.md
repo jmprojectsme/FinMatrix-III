@@ -6,6 +6,15 @@ which must match (checked automatically by `tests/pwa.test.js`):
 
 ---
 
+## 2.0.6 — November 2026 *(step 6a of Phase A)*
+- **Chart of Accounts protection** (B8, B9, B10, B11):
+  - Accounts used in any transaction can't be deleted — **Archive** instead (hidden when entering new
+    transactions, kept in every report and in history; **Restore** anytime). Unused accounts can still be deleted.
+  - Groups that contain used accounts can't be deleted.
+  - Account names are unique across the whole Chart of Accounts (no duplicates, no merging by rename).
+  - A group can't be renamed onto another group's name (which used to lose accounts).
+  - Renaming an account updates only the documents that use it.
+
 ## 2.0.5 — November 2026 *(step 5 of Phase A)*
 - **Balance Sheet "as of"** (B18): the Balance Sheet always includes every posted transaction up to the
   **To** date; the From date is not used (on screen and in the CSV). Header shows "As of: <date>".

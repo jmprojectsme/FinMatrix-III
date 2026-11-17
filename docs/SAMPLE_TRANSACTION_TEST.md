@@ -257,6 +257,28 @@ From this version, the **Date** is at the top of the Sales and Purchases forms (
 
 ---
 
+## Part 8 — Chart of Accounts protection (step 6a)
+
+Use the "Lumen Studio" sample set (Part 7 / the Lumen Studio transactions) so some accounts are used.
+
+| # | Do this | Expected | Actual | ✓/✗ |
+|---|---|---|---|---|
+| C1 | Settings → Chart of Accounts → **Expenses** | **Rent Expense** (used) shows **✎ Archive**; **Insurance Expense** (unused) shows **✎ ×** | | |
+| C2 | Tap **Archive** on Rent Expense → OK | Row shows an **ARCHIVED** tag and a **Restore** button | | |
+| C3 | Purchases → + Add New → open the Account dropdown | **Rent Expense is not listed** | | |
+| C4 | Open the existing Metro Space Leasing purchase | Its line still shows **Rent Expense** | | |
+| C5 | Reports → Income Statement (Jan–Feb) | **Rent Expense (12,000.00)** still there; Net Income unchanged (**37,500.00**) | | |
+| C6 | Back in Chart of Accounts → **Restore** Rent Expense | Tag disappears; it's back in the dropdown | | |
+| C7 | Tap **×** on the **Operating Expenses** group | Message: can't delete — lists the used accounts; nothing deleted | | |
+| C8 | Liabilities → add account **cash on hand** | Message: already exists (Current Assets); not added | | |
+| C9 | Expenses → ✎ on **Utilities Expense** → type **Rent Expense** | Message: already exists; nothing changed | | |
+| C10 | Expenses → ✎ on group **Other Expenses** → type **Operating Expenses** | Message: a group with that name already exists; no accounts lost | | |
+| C11 | Expenses → ✎ on **Rent Expense** → **Studio Rent** | Renamed; the Metro Space purchase and the Income Statement show **Studio Rent (12,000.00)** | | |
+| C12 | Tap **×** on **Insurance Expense** (unused) → OK | Deleted | | |
+| C13 | Settings → About | Version **2.0.6** | | |
+
+---
+
 ## Sign-off
 
 | | Result |
@@ -268,6 +290,7 @@ From this version, the **Date** is at the top of the Sales and Purchases forms (
 | Part 5 — Security (text never runs as code) | ☐ All pass ☐ Some fail |
 | Part 6 — One date per document | ☐ All pass ☐ Some fail |
 | Part 7 — Balance Sheet "as of", labels, Purchases dropdown | ☐ All pass ☐ Some fail |
+| Part 8 — Chart of Accounts protection | ☐ All pass ☐ Some fail |
 
 **Comments:** _______________________________________________________________
 

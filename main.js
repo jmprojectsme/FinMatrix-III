@@ -1221,6 +1221,7 @@ window.addEventListener("DOMContentLoaded", function () {
         version:        window.APP_INFO.version,
         companyProfile: window.companyProfile,
         COA:            window.COA,
+        coaMeta:        window.COA_META,
         sales:          window.savedSales,
         purchases:      window.savedPurchases
       }, null, 2);
@@ -1339,6 +1340,7 @@ window.addEventListener("DOMContentLoaded", function () {
         if(!container) return;
         container.innerHTML="";
         const groups=window.COA[type]||{};
+        const usedNames=new Set([...window.savedSales,...window.savedPurchases].flatMap(d=>(d.rows||[]).map(r=>r.account)));
         Object.keys(groups).forEach(group=>{
           const accs=groups[group];
           const div=document.createElement("div");
@@ -1352,7 +1354,15 @@ window.addEventListener("DOMContentLoaded", function () {
               </div>
             </div>
             <div class="coa-accounts">
-              ${accs.map((a,i)=>`<div class="coa-acc-row"><span>${esc(a)}</span><div><button class="btn-coa-action" data-action="rename-acc" data-type="${type}" data-group="${esc(group)}" data-index="${i}">✎</button><button class="btn-coa-action" data-action="delete-acc" data-type="${type}" data-group="${esc(group)}" data-index="${i}">×</button></div></div>`).join("")||`<div class="coa-empty">No accounts yet.</div>`}
+              ${accs.map((a,i)=>{
+                const archived=window.isArchivedAccount(a);
+                const attrs=`data-type="${type}" data-group="${esc(group)}" data-index="${i}"`;
+                // Used accounts can only be archived; unused ones can be deleted; archived ones can be restored.
+                const second=archived ? `<button class="btn-coa-action btn-coa-text" data-action="restore-acc" ${attrs}>Restore</button>`
+                  : usedNames.has(a) ? `<button class="btn-coa-action btn-coa-text" data-action="archive-acc" ${attrs}>Archive</button>`
+                  : `<button class="btn-coa-action" data-action="delete-acc" ${attrs}>×</button>`;
+                return `<div class="coa-acc-row${archived?" coa-acc-archived":""}"><span>${esc(a)}${archived?` <span class="coa-archived-tag">Archived</span>`:""}</span><div><button class="btn-coa-action" data-action="rename-acc" ${attrs}>✎</button>${second}</div></div>`;
+              }).join("")||`<div class="coa-empty">No accounts yet.</div>`}
             </div>
             <div class="coa-add-row">
               <input type="text" class="new-acc-input" data-type="${type}" data-group="${esc(group)}" placeholder="New account name">
@@ -1363,25 +1373,59 @@ window.addEventListener("DOMContentLoaded", function () {
         container.querySelectorAll(".btn-coa-action").forEach(btn=>{
           btn.onclick=()=>{
             const{action,type:t,group:g,index}=btn.dataset;
-            if(action==="delete-group"){if(!confirm(`Delete group "${g}" and all accounts?`)) return;delete window.COA[t][g];}
-            else if(action==="rename-group"){const n=prompt(`Rename "${g}":`,g);if(!n||n===g) return;const newG={};Object.keys(window.COA[t]).forEach(k=>{newG[k===g?n:k]=window.COA[t][k];});window.COA[t]=newG;}
-            else if(action==="delete-acc"){if(!confirm(`Remove "${window.COA[t][g][+index]}"?`)) return;window.COA[t][g].splice(+index,1);}
+            const usage=name=>window.accountUsage(name,window.savedSales,window.savedPurchases);
+            const listOf=u=>u.slice(0,3).join(", ")+(u.length>3?` and ${u.length-3} more`:"");
+            const archived=window.COA_META.archived;
+            if(action==="delete-group"){
+              // B9: a group whose accounts are used in transactions cannot be deleted
+              const used=window.COA[t][g].filter(a=>usage(a).length);
+              if(used.length){alert(`Can't delete group "${g}": these accounts are used in transactions: ${used.join(", ")}.\n\nArchive those accounts instead; their history stays in your reports.`);return;}
+              if(!confirm(`Delete group "${g}" and its ${window.COA[t][g].length} unused account(s)?`)) return;
+              window.COA[t][g].forEach(a=>{const k=archived.indexOf(a);if(k>=0)archived.splice(k,1);});
+              delete window.COA[t][g];
+            }
+            else if(action==="rename-group"){
+              const n=(prompt(`Rename "${g}":`,g)||"").trim();
+              if(!n||n===g) return;
+              // B8: renaming onto an existing group would lose accounts
+              if(window.findGroup(t,n,g)){alert(`A group named "${n}" already exists in this section.`);return;}
+              const newG={};Object.keys(window.COA[t]).forEach(k=>{newG[k===g?n:k]=window.COA[t][k];});window.COA[t]=newG;
+            }
+            else if(action==="delete-acc"){
+              const name=window.COA[t][g][+index];
+              const u=usage(name);
+              if(u.length){alert(`Can't delete "${name}": it is used in ${u.length} transaction(s): ${listOf(u)}.\n\nUse Archive instead.`);renderCOA();return;}
+              if(!confirm(`Delete "${name}"? It has never been used.`)) return;
+              window.COA[t][g].splice(+index,1);
+            }
+            else if(action==="archive-acc"){
+              const name=window.COA[t][g][+index];
+              if(!confirm(`Archive "${name}"?\n\nIt will be hidden when entering new transactions, but it stays in all reports and history. You can restore it anytime.`)) return;
+              if(!archived.includes(name)) archived.push(name);
+            }
+            else if(action==="restore-acc"){
+              const name=window.COA[t][g][+index];
+              const k=archived.indexOf(name); if(k>=0) archived.splice(k,1);
+            }
             else if(action==="rename-acc"){
               const cur=window.COA[t][g][+index];
-              const n=prompt(`Rename "${cur}":`,cur);
-              if(!n||n.trim()===cur) return;
-              const newName=n.trim();
+              const newName=(prompt(`Rename "${cur}":`,cur)||"").trim();
+              if(!newName||newName===cur) return;
+              // B10/B11: never rename onto another account's name (that would merge two accounts)
+              const clash=window.findAccount(newName,{cat:t,group:g,index:+index});
+              if(clash){alert(`An account named "${clash.name}" already exists (${clash.group}). Choose a different name.`);return;}
               window.COA[t][g][+index]=newName;
-              // Update all existing saved transactions that used the old account name
-              let updated=0;
+              const k=archived.indexOf(cur); if(k>=0) archived[k]=newName;
+              // Update saved documents that use this account (B10: only those documents are written)
               window.savedSales.forEach((s,si)=>{
-                s.rows.forEach((r,ri)=>{ if(r.account===cur){ window.savedSales[si].rows[ri].account=newName; updated++; } });
-                if(updated>0) window.DB.updateSale(si);
+                let changed=false;
+                s.rows.forEach(r=>{ if(r.account===cur){ r.account=newName; changed=true; } });
+                if(changed) window.DB.updateSale(si);
               });
-              updated=0;
               window.savedPurchases.forEach((p,pi)=>{
-                p.rows.forEach((r,ri)=>{ if(r.account===cur){ window.savedPurchases[pi].rows[ri].account=newName; updated++; } });
-                if(updated>0) window.DB.updatePurchase(pi);
+                let changed=false;
+                p.rows.forEach(r=>{ if(r.account===cur){ r.account=newName; changed=true; } });
+                if(changed) window.DB.updatePurchase(pi);
               });
             }
             window.DB.saveCOA();renderCOA();
@@ -1392,7 +1436,8 @@ window.addEventListener("DOMContentLoaded", function () {
             const{type:t,group:g}=btn.dataset;
             const input=btn.parentElement.querySelector(".new-acc-input"); // B12: no selector built from the name
             const val=input.value.trim(); if(!val) return;
-            if(window.COA[t][g].includes(val)){alert("Already exists.");return;}
+            const clash=window.findAccount(val);   // B11: names are unique across the whole COA
+            if(clash){alert(`An account named "${clash.name}" already exists (${clash.group}).`);return;}
             window.COA[t][g].push(val);input.value="";
             window.DB.saveCOA();renderCOA();
           };
@@ -1411,7 +1456,7 @@ window.addEventListener("DOMContentLoaded", function () {
       const doAdd=()=>{
         const name=input.value.trim(); if(!name) return;
         if(!window.COA[type]) window.COA[type]={};
-        if(window.COA[type][name]){alert("Group already exists.");return;}
+        if(window.findGroup(type,name)){alert(`A group named "${name}" already exists in this section.`);return;}
         window.COA[type][name]=[];input.value="";
         window.DB.saveCOA();renderCOA();
       };

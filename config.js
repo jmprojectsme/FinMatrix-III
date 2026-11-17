@@ -9,7 +9,7 @@ window.currentPurchaseIndex = null;
 // App info
 window.APP_INFO = {
   name:      "FinMatrix",
-  version:   "2.0.5",   // keep in sync with CACHE_NAME in sw.js and package.json (checked by tests/pwa.test.js)
+  version:   "2.0.6",   // keep in sync with CACHE_NAME in sw.js and package.json (checked by tests/pwa.test.js)
   developer: "Jaymar Reperuga",
   updated:   "November 2026",
   description: "A free mobile-first accounting tool built for Philippine small businesses and freelancers."
@@ -25,6 +25,10 @@ window.companyProfile = {
   bir_reg_no:   "",
   contact:      ""
 };
+
+// Chart of Accounts settings (step 6a): accounts that are archived (hidden for new
+// entries, but kept in every report and in history). Saved separately from the COA.
+window.COA_META = { archived: [] };
 
 window.COA = {
   sales: {

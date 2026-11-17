@@ -13,6 +13,7 @@ These tests run automatically on GitHub every time you push, so you don't need a
 | `ui-xss.test.js` | Security: text typed by users (names, references, accounts, company name) is shown as plain text on every screen and can never run as code; Chart of Accounts group names with quotes work |
 | `ui-dates.test.js` | One date per document: the Date field at the top is saved and locked when posted, and every report (Journal, Trial Balance, Income Statement, Balance Sheet, Sales/Purchases by Account, lists) puts a document in the same period; older documents use their first line's date and are not changed |
 | `ui-reports.test.js` | Balance Sheet is cumulative "as of" the To date (screen and CSV), Income Statement still uses the period, report labels show All/Today, Purchases payment dropdown resets and locks like Sales |
+| `ui-coa.test.js` | Chart of Accounts protection: used accounts can only be archived (hidden for new entries, kept in reports), unused ones can be deleted; groups with used accounts can't be deleted; no duplicate names or merging by rename; rename updates only documents that use the account |
 | `pwa.test.js` | App packaging: manifest is valid, icons exist, every file the service worker caches exists, every script in `index.html` exists |
 
 Before the tests, GitHub also checks that every `.js` file has valid syntax.

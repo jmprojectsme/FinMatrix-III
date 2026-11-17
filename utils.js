@@ -34,6 +34,44 @@ window.calcNet = function (rows) {
 
 // Account dropdown — shows all COA categories, natural category first
 // If selected account no longer exists in COA (renamed/deleted), still shows it
+// ── Chart of Accounts rules (step 6a: B8, B9, B10, B11) ──
+const _norm = s => String(s ?? "").trim().toLowerCase();
+
+window.isArchivedAccount = function (name) {
+  return (window.COA_META?.archived || []).includes(name);
+};
+
+// Where an account name already exists anywhere in the COA (case-insensitive), or null.
+// `except` = { cat, group, index } to ignore the account being renamed.
+window.findAccount = function (name, except) {
+  const n = _norm(name);
+  for (const [cat, groups] of Object.entries(window.COA || {}))
+    for (const [group, accs] of Object.entries(groups || {}))
+      for (let i = 0; i < accs.length; i++) {
+        if (except && except.cat === cat && except.group === group && except.index === i) continue;
+        if (_norm(accs[i]) === n) return { cat, group, index: i, name: accs[i] };
+      }
+  return null;
+};
+
+// A group name already used in the same section (case-insensitive), or null. `except` = current name.
+window.findGroup = function (cat, name, except) {
+  const n = _norm(name);
+  return Object.keys(window.COA?.[cat] || {}).find(g => g !== except && _norm(g) === n) || null;
+};
+
+// Documents (any status: Draft, Posted, Void) that use an account. Returns short labels.
+window.accountUsage = function (name, sales, purchases) {
+  const out = [];
+  const scan = (list, kind, partyKey) => (list || []).forEach(d => {
+    if ((d.rows || []).some(r => r.account === name))
+      out.push(`${kind} ${d.reference || d[partyKey] || "(no name)"}${d.status ? " (" + d.status + ")" : ""}`);
+  });
+  scan(sales, "Sale", "customer");
+  scan(purchases, "Purchase", "supplier");
+  return out;
+};
+
 window.createAccountDropdown = function (type, selected) {
   const sel = document.createElement("select");
   sel.className = "account-select";
@@ -54,6 +92,7 @@ window.createAccountDropdown = function (type, selected) {
       const og = document.createElement("optgroup");
       og.label = `[${catLabels[cat]||cat}] ${g}`;
       groups[g].forEach(acc => {
+        if (window.isArchivedAccount(acc) && acc !== selected) return; // archived: hidden for new entries
         const o = document.createElement("option");
         o.value = acc; o.textContent = acc;
         if (acc === selected) { o.selected = true; foundSelected = true; }

@@ -66,7 +66,10 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 3. [x] XSS escaping of user text (B28), plus Chart of Accounts group names with quotes (B12) *(merged, PR #3)*
 4. [x] One date per document (B14) — Option A: one Date at the top of the form, like Xero *(merged, PR #4)*
 5. [x] Balance Sheet cumulative "as of"; "Period: All" labels (B18, B22); Purchases payment dropdown reset + lock; About shows real version *(merged, PR #5)*
-6. [ ] Chart of Accounts safety — account IDs & types, protected system accounts, no duplicates/lost accounts (B7–B11)
+6. [ ] Chart of Accounts safety, split in three (owner agreed; Xero-style "archive, never delete history"):
+   - [x] **6a** Protect: used accounts → Archive only; unused → Delete; groups with used accounts can't be deleted; unique names; no merge by rename; rename writes only affected documents (B8–B11) *(built and tested on branch; awaiting owner test + merge)*
+   - [ ] **6b** System accounts (Cash on Hand, Cash in Bank, AR, AP, Input VAT, Output VAT): can't be deleted/archived; can be renamed — posting finds them by role (B7)
+   - [ ] **6c** Permanent account IDs + types; transactions point to IDs; migration with backup (later, before opening balances)
 7. [ ] Report accuracy — TB net balances & ordering, IS sections (Gross Profit etc.), Home Net Income = IS (B13, B16, B17)
 8. [ ] Voids as reversing entries (B5)
 9. [ ] **Opening balances** (owner request; Xero "conversion balances")
@@ -115,6 +118,7 @@ Make FinMatrix a real, usable bookkeeping app for Philippine small businesses an
 | Existing sales saved as "Credit" before B1 | Left unchanged; owner may void and re-enter if some were really cash/bank |
 | Testing new versions on the phone | Spck Pull is a paid feature. Use a raw.githack link to the exact commit (separate storage; do not install it), or re-clone / ZIP |
 | App updates reaching installed phones | Every release that changes app files bumps the version in **three places that must match**: `sw.js` CACHE_NAME, `config.js` APP_INFO.version + updated (shown in Settings → About), `package.json` — enforced by `tests/pwa.test.js`. Record each release in `docs/CHANGELOG.md`. Proper update prompt is in Phase B |
+| Chart of Accounts: archive, never delete history (owner decision) | Used accounts can only be **archived** (like Xero/QuickBooks); unused accounts may be deleted. System accounts may be renamed but not deleted (6b). Until 6c, renaming a used account shows the new name on past documents |
 | Screen orientation (owner decision) | **Landscape is intentional** — wide tables (lines, reports) fit better on a phone. Keep `"orientation": "landscape"` in `manifest.json`; B27's orientation point is closed as *won't change*. Check layouts in landscape |
 | Document date (agreed, Option A) | One date per sale/purchase at the top of the form (like Xero invoice date / BIR invoice). It decides the period and VAT quarter in every report. Older documents: first line's date |
 | Validation policy (agreed) | More than 2 decimals → **reject** (no auto-round). Zero-amount lines → **block posting**. Basic checks on Save, full checks on Post (drafts may be incomplete, like Xero) |

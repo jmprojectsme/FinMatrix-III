@@ -203,7 +203,7 @@ test("TC-11.5 / 12.2 renaming Cash on Hand keeps BS balanced", { todo: "B7: syst
   const s = statements(D1, "2026-03-31", coa);
   assert.equal(s.A, s.Li + s.E);
 });
-test("TC-12.3 deleting Rent Expense does not change NI", { todo: "B9/B15: reports classify by current COA" }, () => {
+test("TC-12.3 deleting Rent Expense does not change NI", { todo: "6c: reports classify by the current COA (the app now blocks deleting used accounts, 6a)" }, () => {
   const coa = JSON.parse(JSON.stringify(W.COA));
   coa.purchases["Operating Expenses"] = coa.purchases["Operating Expenses"].filter(a => a !== "Rent Expense");
   assert.equal(statements(D1, "2026-03-31", coa).ni, 5400000);
